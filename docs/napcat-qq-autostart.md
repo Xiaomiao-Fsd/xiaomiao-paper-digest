@@ -9,9 +9,9 @@
 
 ## 当前配置
 
-- NapCat 根目录：`/home/huangchengbin/.openclaw/napcat-shell`
-- QQ profile：`/home/huangchengbin/.openclaw/qq-napcat-profile-x11fix`
-- 日志：`/home/huangchengbin/.openclaw/napcat-shell/napcat-x11fix.log`
+- NapCat 根目录：`/home/XiaomiaoClaw/.openclaw/napcat-shell`
+- QQ profile：`/home/XiaomiaoClaw/.openclaw/qq-napcat-profile-x11fix`
+- 日志：`/home/XiaomiaoClaw/.openclaw/napcat-shell/napcat-x11fix.log`
 - 自启动入口：`~/.config/autostart/napcat-qq.desktop`
 
 ## 说明

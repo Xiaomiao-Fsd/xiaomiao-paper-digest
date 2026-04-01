@@ -3,9 +3,9 @@ set -euo pipefail
 
 USER_ID="$(id -u)"
 RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/${USER_ID}}"
-WORKSPACE="${WORKSPACE:-/home/huangchengbin/.openclaw/workspace}"
-NAPCAT_ROOT="${NAPCAT_ROOT:-/home/huangchengbin/.openclaw/napcat-shell}"
-PROFILE_DIR="${NAPCAT_PROFILE_DIR:-/home/huangchengbin/.openclaw/qq-napcat-profile-x11fix}"
+WORKSPACE="${WORKSPACE:-/home/XiaomiaoClaw/.openclaw/workspace}"
+NAPCAT_ROOT="${NAPCAT_ROOT:-/home/XiaomiaoClaw/.openclaw/napcat-shell}"
+PROFILE_DIR="${NAPCAT_PROFILE_DIR:-/home/XiaomiaoClaw/.openclaw/qq-napcat-profile-x11fix}"
 LOG_FILE="${NAPCAT_LOG_FILE:-${NAPCAT_ROOT}/napcat-x11fix.log}"
 PID_FILE="${NAPCAT_PID_FILE:-${NAPCAT_ROOT}/napcat-qq.pid}"
 QQ_BIN="${QQ_BIN:-/opt/QQ/qq}"

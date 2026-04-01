@@ -3,7 +3,7 @@ set -euo pipefail
 
 AUTOSTART_DIR="${HOME}/.config/autostart"
 DESKTOP_FILE="${AUTOSTART_DIR}/napcat-qq.desktop"
-START_SCRIPT="/home/huangchengbin/.openclaw/workspace/scripts/start_napcat_qq.sh"
+START_SCRIPT="/home/XiaomiaoClaw/.openclaw/workspace/scripts/start_napcat_qq.sh"
 
 mkdir -p "${AUTOSTART_DIR}"
 
