@@ -10,6 +10,12 @@ LOG_FILE="${NAPCAT_LOG_FILE:-${NAPCAT_ROOT}/napcat-x11fix.log}"
 PID_FILE="${NAPCAT_PID_FILE:-${NAPCAT_ROOT}/napcat-qq.pid}"
 QQ_BIN="${QQ_BIN:-/opt/QQ/qq}"
 DISPLAY_VALUE="${DISPLAY:-:0}"
+AUTOSTART_DELAY="${NAPCAT_AUTOSTART_DELAY:-15}"
+XAUTH_WAIT_SECONDS="${NAPCAT_XAUTH_WAIT_SECONDS:-30}"
+
+log() {
+  printf '[%s] %s\n' "$(date '+%F %T')" "$*"
+}
 
 find_xauthority() {
   if [[ -n "${XAUTHORITY:-}" && -f "${XAUTHORITY}" ]]; then
@@ -31,12 +37,35 @@ find_xauthority() {
   return 1
 }
 
+wait_for_xauthority() {
+  local waited=0
+  local found
+
+  while (( waited < XAUTH_WAIT_SECONDS )); do
+    found="$(find_xauthority || true)"
+    if [[ -n "${found}" ]]; then
+      printf '%s\n' "${found}"
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+
+  return 1
+}
+
 is_running() {
   ps -eo cmd= | grep -F -- "${QQ_BIN} " | grep -F -- "--user-data-dir=${PROFILE_DIR}" >/dev/null 2>&1
 }
 
+if [[ ! -x "${QQ_BIN}" ]]; then
+  echo "QQ binary not found or not executable: ${QQ_BIN}" >&2
+  exit 1
+fi
+
 if [[ "${NAPCAT_AUTOSTART:-0}" == "1" ]]; then
-  sleep "${NAPCAT_AUTOSTART_DELAY:-8}"
+  log "Autostart detected, delaying launch for ${AUTOSTART_DELAY}s."
+  sleep "${AUTOSTART_DELAY}"
 fi
 
 mkdir -p "${NAPCAT_ROOT}" "${PROFILE_DIR}"
@@ -47,14 +76,15 @@ if is_running; then
   exit 0
 fi
 
-XAUTH_FILE="$(find_xauthority || true)"
+XAUTH_FILE="$(wait_for_xauthority || true)"
 if [[ -z "${XAUTH_FILE}" ]]; then
-  echo "Unable to locate XAUTHORITY file for X11 startup." >&2
+  echo "Unable to locate XAUTHORITY file for X11 startup after ${XAUTH_WAIT_SECONDS}s." >&2
   exit 1
 fi
 
 cd "${NAPCAT_ROOT}"
 
+log "Launching NapCat QQ on DISPLAY=${DISPLAY_VALUE} with profile ${PROFILE_DIR}."
 nohup env -u WAYLAND_DISPLAY \
   DISPLAY="${DISPLAY_VALUE}" \
   XAUTHORITY="${XAUTH_FILE}" \

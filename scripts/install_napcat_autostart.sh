@@ -13,9 +13,10 @@ Type=Application
 Version=1.0
 Name=NapCat QQ Background
 Comment=Start NapCat-injected QQ in background on login
-Exec=/usr/bin/env NAPCAT_AUTOSTART=1 NAPCAT_AUTOSTART_DELAY=8 ${START_SCRIPT}
+Exec=/usr/bin/env NAPCAT_AUTOSTART=1 NAPCAT_AUTOSTART_DELAY=15 NAPCAT_XAUTH_WAIT_SECONDS=30 ${START_SCRIPT}
 Terminal=false
 X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=15
 StartupNotify=false
 Categories=Utility;
 EOF
