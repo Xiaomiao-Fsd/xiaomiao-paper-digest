@@ -6,6 +6,8 @@ const path = require('path');
 const os = require('os');
 const { Readable } = require('stream');
 const { pipeline } = require('stream/promises');
+const { createInterface } = require('readline/promises');
+const { stdin, stdout } = require('process');
 
 const DXDATA_URL = 'https://dxrating.net/assets/dxdata-853f5308.js';
 const ASTRO_BASE_URL = 'https://api.milkbot.cn/server';
@@ -24,6 +26,7 @@ Usage:
   node scripts/maimai_astrodx_batch.js captcha [--state <file>] [--captcha-out <file>]
   node scripts/maimai_astrodx_batch.js manifest [--out-dir <dir>] [--min <num>]
   node scripts/maimai_astrodx_batch.js download [--code <4chars>] [--state <file>] [--out-dir <dir>] [--no-bga] [--overwrite] [--min <num>]
+  node scripts/maimai_astrodx_batch.js interactive [--state <file>] [--captcha-out <file>] [--out-dir <dir>] [--no-bga] [--overwrite] [--min <num>]
 
 What it does:
   - Pulls charts from DXRating
@@ -35,6 +38,7 @@ Examples:
   node scripts/maimai_astrodx_batch.js captcha
   node scripts/maimai_astrodx_batch.js download --code Ab12
   node scripts/maimai_astrodx_batch.js download --code Ab12 --no-bga --out-dir ~/Documents/AstroDX
+  node scripts/maimai_astrodx_batch.js interactive --out-dir ~/Documents/AstroDX
 `);
 }
 
@@ -482,6 +486,20 @@ async function runDownloadCommand(args) {
   }
 }
 
+async function runInteractiveCommand(args) {
+  const result = await fetchCaptcha({ statePath: args.state, captchaOut: args.captchaOut });
+  console.log(`Captcha saved to: ${result.captchaOut}`);
+  console.log('Open that file, read the 4-character captcha, then paste it below.');
+
+  const rl = createInterface({ input: stdin, output: stdout });
+  try {
+    const code = (await rl.question('Captcha code: ')).trim();
+    await runDownloadCommand({ ...args, code });
+  } finally {
+    rl.close();
+  }
+}
+
 async function main() {
   let args;
   try {
@@ -511,6 +529,10 @@ async function main() {
     }
     case 'download': {
       await runDownloadCommand(args);
+      return;
+    }
+    case 'interactive': {
+      await runInteractiveCommand(args);
       return;
     }
     default:
