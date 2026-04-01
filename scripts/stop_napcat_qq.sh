@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROFILE_DIR="${NAPCAT_PROFILE_DIR:-/home/huangchengbin/.openclaw/qq-napcat-profile-x11fix}"
-NAPCAT_ROOT="${NAPCAT_ROOT:-/home/huangchengbin/.openclaw/napcat-shell}"
+PROFILE_DIR="${NAPCAT_PROFILE_DIR:-/home/XiaomiaoClaw/.openclaw/qq-napcat-profile-x11fix}"
+NAPCAT_ROOT="${NAPCAT_ROOT:-/home/XiaomiaoClaw/.openclaw/napcat-shell}"
 PID_FILE="${NAPCAT_PID_FILE:-${NAPCAT_ROOT}/napcat-qq.pid}"
 QQ_BIN="${QQ_BIN:-/opt/QQ/qq}"
 

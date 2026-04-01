@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TARGET_DIR="/home/huangchengbin/.openclaw/napcat-shell"
-INSTALLER="/home/huangchengbin/.openclaw/workspace/tmp/napcat-install.sh"
+TARGET_DIR="/home/XiaomiaoClaw/.openclaw/napcat-shell"
+INSTALLER="/home/XiaomiaoClaw/.openclaw/workspace/tmp/napcat-install.sh"
 ZIP_PATH="$TARGET_DIR/NapCat.Shell.zip"
 
 cd "$TARGET_DIR"
