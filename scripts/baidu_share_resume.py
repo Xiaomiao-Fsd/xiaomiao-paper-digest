@@ -35,6 +35,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--log", default="")
     p.add_argument("--refresh-interval", type=int, default=300, help="Seconds before proactively refreshing share auth")
     p.add_argument("--max-attempts", type=int, default=6)
+    p.add_argument("--continue-on-failure", action="store_true", help="Log failed files and continue with remaining ones")
     return p.parse_args()
 
 
@@ -55,7 +56,8 @@ class Logger:
 
 class BaiduShareDownloader:
     def __init__(self, share_url: str, password: str, target_root: pathlib.Path, cookie_db: str, log: Logger,
-                 refresh_interval: int = 300, max_attempts: int = 6, ua: str = DEFAULT_UA):
+                 refresh_interval: int = 300, max_attempts: int = 6, continue_on_failure: bool = False,
+                 ua: str = DEFAULT_UA):
         self.share_url = share_url
         self.password = password
         self.target_root = target_root
@@ -63,6 +65,7 @@ class BaiduShareDownloader:
         self.log = log
         self.refresh_interval = refresh_interval
         self.max_attempts = max_attempts
+        self.continue_on_failure = continue_on_failure
         self.ua = ua
         self.session = requests.Session()
         self.base_headers = {"User-Agent": self.ua, "Referer": self.share_url}
@@ -230,10 +233,15 @@ class BaiduShareDownloader:
         j = r.json()
         errno = j.get("errno")
         if errno == 0:
-            dlink = (j.get("list") or [{}])[0].get("dlink")
-            if not dlink:
-                raise DownloadError(f"no dlink returned: {j}")
-            return dlink
+            if isinstance(j.get("list"), list):
+                dlink = (j.get("list") or [{}])[0].get("dlink")
+                if dlink:
+                    return dlink
+            if isinstance(j.get("dlink"), str) and j.get("dlink"):
+                return j["dlink"]
+            if isinstance(j.get("list"), str):
+                raise DownloadError("sharedownload returned encoded list string; direct dlink unavailable")
+            raise DownloadError(f"no dlink returned: {j}")
         show_msg = str(j.get("show_msg") or "")
         if errno == 112 or "验证码已过期" in show_msg:
             raise AuthExpired(str(j))
@@ -316,6 +324,7 @@ class BaiduShareDownloader:
 
         skipped = 0
         done = 0
+        failures: list[str] = []
         for idx, item in enumerate(files, 1):
             rel = item["path"].lstrip("/")
             out = self.target_root / rel
@@ -353,10 +362,19 @@ class BaiduShareDownloader:
                             self.log("REFRESH_FAIL", repr(refresh_error))
                     time.sleep(min(2 * attempt, 12))
             if not success:
-                raise SystemExit(f"FAILED on {rel}: {last_error}")
+                msg = f"FAILED on {rel}: {last_error}"
+                if self.continue_on_failure:
+                    failures.append(msg)
+                    self.log("FAILED_SKIP", msg)
+                    continue
+                raise SystemExit(msg)
 
-        self.log("DONE", f"downloaded={done}", f"skipped={skipped}", f"target={self.target_root}")
-        return 0
+        if failures:
+            self.log("FAILURES", len(failures))
+            for msg in failures:
+                self.log("FAIL", msg)
+        self.log("DONE", f"downloaded={done}", f"skipped={skipped}", f"failed={len(failures)}", f"target={self.target_root}")
+        return 0 if not failures else 2
 
 
 def main() -> int:
@@ -371,6 +389,7 @@ def main() -> int:
         log=logger,
         refresh_interval=args.refresh_interval,
         max_attempts=args.max_attempts,
+        continue_on_failure=args.continue_on_failure,
     )
     return downloader.run()
 
