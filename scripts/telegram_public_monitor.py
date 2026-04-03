@@ -4,7 +4,7 @@ import json
 import re
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Optional
@@ -24,6 +24,7 @@ class Post:
     time_label: str
     author: str
     text: str
+    media_urls: list[str] = field(default_factory=list)
 
 
 class TelegramPublicPageParser(HTMLParser):
@@ -126,6 +127,25 @@ def normalize_channel_url(raw: str) -> str:
     return f"https://t.me/s/{quote(raw)}"
 
 
+def extract_media_urls_by_post(page_html: str) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    pattern = re.compile(
+        r'<div class="tgme_widget_message_wrap js-widget_message_wrap"><div class="tgme_widget_message[^>]*data-post="([^"]+)"(.*?)(?=(?:<div class="tgme_widget_message_wrap js-widget_message_wrap">|<div class="tgme_widget_message_centered js-messages_more_wrap">|</section>))',
+        re.S,
+    )
+    for post_key, chunk in pattern.findall(page_html):
+        urls = []
+        for url in re.findall(r'tgme_widget_message_photo_wrap[^>]*background-image:url\(\'([^\']+)\'\)', chunk):
+            if url.startswith('//'):
+                url = 'https:' + url
+            if '/emoji/' in url:
+                continue
+            if url not in urls:
+                urls.append(url)
+        out[post_key] = urls
+    return out
+
+
 def fetch_page(url: str, before: Optional[int], proxy: Optional[str]) -> list[Post]:
     page_url = url if before is None else f"{url}?before={before}"
     proxies = None
@@ -133,6 +153,7 @@ def fetch_page(url: str, before: Optional[int], proxy: Optional[str]) -> list[Po
         proxies = {"http": proxy, "https": proxy}
     r = requests.get(page_url, headers={"User-Agent": UA}, proxies=proxies, timeout=30)
     r.raise_for_status()
+    media_map = extract_media_urls_by_post(r.text)
     parser = TelegramPublicPageParser()
     parser.feed(r.text)
     parser.close()
@@ -150,6 +171,7 @@ def fetch_page(url: str, before: Optional[int], proxy: Optional[str]) -> list[Po
             time_label=item["time_label"],
             author=item["author"] or "频道",
             text=item["text"],
+            media_urls=media_map.get(item["post"], []),
         ))
     posts.sort(key=lambda x: x.id)
     return posts
@@ -169,7 +191,23 @@ def save_state(path: Path, state: dict) -> None:
     path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def build_message(channel: str, posts: list[Post]) -> str:
+def download_media(url: str, proxy: Optional[str], out_path: Path) -> Optional[Path]:
+    proxies = None
+    if proxy:
+        proxies = {"http": proxy, "https": proxy}
+    for verify in (True, False):
+        try:
+            r = requests.get(url, headers={"User-Agent": UA}, proxies=proxies, timeout=60, verify=verify)
+            r.raise_for_status()
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(r.content)
+            return out_path
+        except Exception:
+            continue
+    return None
+
+
+def build_message(channel: str, posts: list[Post], proxy: Optional[str], media_dir: Optional[Path], media_limit: int) -> str:
     lines = [f"{channel} 有 {len(posts)} 条新帖："]
     for i, post in enumerate(posts, 1):
         text = post.text or "[媒体帖 / 无正文]"
@@ -181,6 +219,18 @@ def build_message(channel: str, posts: list[Post]) -> str:
             f"   {text}",
             f"   {post.url}",
         ])
+        if media_dir and post.media_urls:
+            attached = 0
+            for idx, media_url in enumerate(post.media_urls[:max(media_limit, 0)], 1):
+                suffix = Path(media_url.split('?', 1)[0]).suffix or '.jpg'
+                target = media_dir / f"{channel}_{post.id}_{idx}{suffix}"
+                saved = download_media(media_url, proxy, target)
+                if saved:
+                    lines.append(f"   <qqimg>{saved}</qqimg>")
+                    attached += 1
+            remaining = len(post.media_urls) - attached
+            if remaining > 0:
+                lines.append(f"   [还有 {remaining} 张图未附带]")
     return "\n".join(lines).strip()
 
 
@@ -251,6 +301,8 @@ def main() -> int:
     ap.add_argument("--max-pages", type=int, default=8)
     ap.add_argument("--prefix", action="append", default=[], help="Only notify posts whose text starts with this prefix")
     ap.add_argument("--leading-bracket-contains", action="append", default=[], help="Only notify posts whose leading bracketed tag contains this string")
+    ap.add_argument("--media-dir", default="", help="Download matched post images to this directory and include them in the message")
+    ap.add_argument("--media-limit", type=int, default=4, help="Maximum images to attach per post")
     ap.add_argument("--init", action="store_true")
     args = ap.parse_args()
 
@@ -290,7 +342,8 @@ def main() -> int:
             "updated_at": int(time.time()),
         })
 
-    message = build_message(args.channel, matched_posts) if matched_posts else ""
+    media_dir = Path(args.media_dir) if args.media_dir else None
+    message = build_message(args.channel, matched_posts, args.proxy or None, media_dir, args.media_limit) if matched_posts else ""
     print(json.dumps({
         "ok": True,
         "initialized": False,
