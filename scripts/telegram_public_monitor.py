@@ -184,6 +184,18 @@ def build_message(channel: str, posts: list[Post]) -> str:
     return "\n".join(lines).strip()
 
 
+def filter_posts_by_prefix(posts: list[Post], prefixes: list[str]) -> list[Post]:
+    cleaned = [p.strip() for p in prefixes if p and p.strip()]
+    if not cleaned:
+        return posts
+    matched: list[Post] = []
+    for post in posts:
+        text = (post.text or "").lstrip()
+        if any(text.startswith(prefix) for prefix in cleaned):
+            matched.append(post)
+    return matched
+
+
 def collect_new_posts(url: str, last_seen_id: int, proxy: Optional[str], max_pages: int) -> tuple[list[Post], int]:
     all_new: dict[int, Post] = {}
     before: Optional[int] = None
@@ -215,6 +227,7 @@ def main() -> int:
     ap.add_argument("--state-file", required=True)
     ap.add_argument("--proxy", default="")
     ap.add_argument("--max-pages", type=int, default=8)
+    ap.add_argument("--prefix", action="append", default=[], help="Only notify posts whose text starts with this prefix")
     ap.add_argument("--init", action="store_true")
     args = ap.parse_args()
 
@@ -245,6 +258,7 @@ def main() -> int:
         return 0
 
     new_posts, latest_on_site = collect_new_posts(url, last_seen_id, args.proxy or None, args.max_pages)
+    matched_posts = filter_posts_by_prefix(new_posts, args.prefix)
     if latest_on_site > last_seen_id:
         save_state(state_path, {
             "channel": args.channel,
@@ -253,15 +267,17 @@ def main() -> int:
             "updated_at": int(time.time()),
         })
 
-    message = build_message(args.channel, new_posts) if new_posts else ""
+    message = build_message(args.channel, matched_posts) if matched_posts else ""
     print(json.dumps({
         "ok": True,
         "initialized": False,
         "channel": args.channel,
         "latest_id": latest_on_site,
-        "new_count": len(new_posts),
+        "new_count": len(matched_posts),
+        "seen_count": len(new_posts),
         "message": message,
-        "new_posts": [post.__dict__ for post in new_posts],
+        "new_posts": [post.__dict__ for post in matched_posts],
+        "seen_posts": [post.__dict__ for post in new_posts],
     }, ensure_ascii=False))
     return 0
 
