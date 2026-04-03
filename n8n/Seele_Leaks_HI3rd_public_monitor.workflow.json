@@ -1,0 +1,218 @@
+{
+  "name": "Seele_Leaks HI3rd Public Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0001",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/telegram_public_monitor.py Seele_Leaks --state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/seele_leaks_state.json --proxy http://127.0.0.1:7897 --leading-bracket-contains HI3rd --media-dir /home/XiaomiaoClaw/.openclaw/workspace/tmp/telegram_public_monitor_media --media-limit 4"
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0002",
+      "name": "Monitor Seele_Leaks",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.stdout || '';\nconst start = raw.indexOf('{');\nconst end = raw.lastIndexOf('}');\nif (start === -1 || end === -1) {\n  throw new Error('No JSON object found in command stdout');\n}\nconst data = JSON.parse(raw.slice(start, end + 1));\nreturn [{ json: data }];"
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0003",
+      "name": "Parse Monitor JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf1001",
+              "leftValue": "={{$json.new_count}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0004",
+      "name": "Has New HI3rd Posts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf2001",
+              "name": "channel",
+              "value": "={{$json.channel}}",
+              "type": "string"
+            },
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf2002",
+              "name": "latest_id",
+              "value": "={{$json.latest_id}}",
+              "type": "number"
+            },
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf2003",
+              "name": "new_count",
+              "value": "={{$json.new_count}}",
+              "type": "number"
+            },
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf2004",
+              "name": "message",
+              "value": "={{$json.message}}",
+              "type": "string"
+            },
+            {
+              "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf2005",
+              "name": "new_posts_json",
+              "value": "={{JSON.stringify($json.new_posts)}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0005",
+      "name": "Prepare Notification Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1220,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Connect your notifier here\nThis workflow already handles polling, filtering, dedupe state, and image download.\n\nUse `message` as the final notification body. It already contains the text + `<qqimg>` tags for the first 4 images.\n\nRecommended next step:\n- Connect this output to your preferred notification node/webhook\n- Or replace this placeholder with an Execute Command / HTTP Request node that pushes `message` to your own channel\n",
+        "height": 260,
+        "width": 360,
+        "color": 5
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0006",
+      "name": "How to Use",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1210,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Monitor Seele_Leaks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monitor Seele_Leaks": {
+      "main": [
+        [
+          {
+            "node": "Parse Monitor JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Monitor JSON": {
+      "main": [
+        [
+          {
+            "node": "Has New HI3rd Posts?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has New HI3rd Posts?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Notification Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "telegram"
+    },
+    {
+      "name": "monitor"
+    },
+    {
+      "name": "hi3rd"
+    }
+  ],
+  "active": false,
+  "versionId": "6e9e0d6d-d3cd-45af-9d4d-bfd5e8550001",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "xiaomiaoclaw-local"
+  },
+  "id": "SeeleLeaksHI3rdPublicMonitor"
+}
