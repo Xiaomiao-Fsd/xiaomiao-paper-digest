@@ -17,10 +17,7 @@
       "name": "Every 5 Minutes",
       "type": "n8n-nodes-base.cron",
       "typeVersion": 1,
-      "position": [
-        260,
-        300
-      ]
+      "position": [260, 300]
     },
     {
       "parameters": {
@@ -30,10 +27,7 @@
       "name": "Monitor Seele_Leaks",
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
-      "position": [
-        500,
-        300
-      ]
+      "position": [500, 300]
     },
     {
       "parameters": {
@@ -44,10 +38,7 @@
       "name": "Parse Monitor JSON",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        740,
-        300
-      ]
+      "position": [740, 300]
     },
     {
       "parameters": {
@@ -76,10 +67,7 @@
       "name": "Has New HI3rd Posts?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        980,
-        300
-      ]
+      "position": [980, 300]
     },
     {
       "parameters": {
@@ -123,26 +111,41 @@
       "name": "Prepare Notification Payload",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        1220,
-        220
-      ]
+      "position": [1220, 220]
     },
     {
       "parameters": {
-        "content": "## Connect your notifier here\nThis workflow already handles polling, filtering, dedupe state, and image download.\n\nUse `message` as the final notification body. It already contains the text + `<qqimg>` tags for the first 4 images.\n\nRecommended next step:\n- Connect this output to your preferred notification node/webhook\n- Or replace this placeholder with an Execute Command / HTTP Request node that pushes `message` to your own channel\n",
-        "height": 260,
-        "width": 360,
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: { ...item, message_b64: Buffer.from(item.message || '', 'utf8').toString('base64') } }];"
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0007",
+      "name": "Encode Message Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1460, 220]
+    },
+    {
+      "parameters": {
+        "command": "={{ `python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py --session-key agent:main:qqbot:direct:256539deaa7d9d8b88e512af979a8b6d --message-b64 ${$json.message_b64}` }}"
+      },
+      "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0008",
+      "name": "Notify QQ via OpenClaw",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1700, 220]
+    },
+    {
+      "parameters": {
+        "content": "## Workflow is fully wired\nThis version already does the final QQ notification step.\n\nFlow:\n1. Poll public Telegram page\n2. Filter posts whose leading bracket tag contains `HI3rd`\n3. Download up to 4 images\n4. Build one combined message body\n5. Use local OpenClaw helper script to send the result back to the QQ direct session\n\nFiles used:\n- monitor script: `/home/XiaomiaoClaw/.openclaw/workspace/scripts/telegram_public_monitor.py`\n- QQ notify helper: `/home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py`\n",
+        "height": 320,
+        "width": 420,
         "color": 5
       },
       "id": "b79e8ecf-3a18-4f13-b72b-a0c5e5cf0006",
       "name": "How to Use",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        1210,
-        20
-      ]
+      "position": [1180, 0]
     }
   ],
   "connections": {
@@ -190,6 +193,28 @@
         ],
         []
       ]
+    },
+    "Prepare Notification Payload": {
+      "main": [
+        [
+          {
+            "node": "Encode Message Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encode Message Base64": {
+      "main": [
+        [
+          {
+            "node": "Notify QQ via OpenClaw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
@@ -206,10 +231,13 @@
     },
     {
       "name": "hi3rd"
+    },
+    {
+      "name": "qq"
     }
   ],
   "active": false,
-  "versionId": "6e9e0d6d-d3cd-45af-9d4d-bfd5e8550001",
+  "versionId": "7f9d4e02-70fe-4f30-b812-7f6f72d50002",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "xiaomiaoclaw-local"
