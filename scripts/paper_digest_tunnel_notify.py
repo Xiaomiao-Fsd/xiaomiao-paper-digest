@@ -8,6 +8,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 UTC = timezone.utc
 WORKSPACE = Path("/home/XiaomiaoClaw/.openclaw/workspace")
@@ -24,6 +25,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--notify-script", default=str(DEFAULT_NOTIFY_SCRIPT))
     ap.add_argument("--poll-seconds", type=float, default=20.0)
     ap.add_argument("--timeout", type=int, default=120)
+    ap.add_argument("--daily-time", default="08:30")
+    ap.add_argument("--tz", default="Asia/Shanghai")
     ap.add_argument("--once", action="store_true")
     return ap.parse_args()
 
@@ -93,24 +96,51 @@ def ensure_state_defaults(state: dict) -> dict:
         "initialized": bool(state.get("initialized", False)),
         "last_seen_url": state.get("last_seen_url") if isinstance(state.get("last_seen_url"), str) else None,
         "last_notified_url": state.get("last_notified_url") if isinstance(state.get("last_notified_url"), str) else None,
+        "last_notified_day": state.get("last_notified_day") if isinstance(state.get("last_notified_day"), str) else None,
         "updated_at": state.get("updated_at") if isinstance(state.get("updated_at"), str) else None,
     }
+
+
+def parse_daily_time(raw: str) -> tuple[int, int]:
+    try:
+        hour_s, minute_s = raw.strip().split(":", 1)
+        hour = int(hour_s)
+        minute = int(minute_s)
+    except Exception as exc:
+        raise ValueError(f"invalid daily time: {raw}") from exc
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        raise ValueError(f"invalid daily time: {raw}")
+    return hour, minute
+
+
+def should_send_today(now_local: datetime, state: dict, current_url: str | None, daily_hour: int, daily_minute: int) -> bool:
+    if not current_url:
+        return False
+    if (now_local.hour, now_local.minute) < (daily_hour, daily_minute):
+        return False
+    today = now_local.date().isoformat()
+    if state.get("last_notified_day") == today:
+        return False
+    return True
 
 
 def run_once(args: argparse.Namespace) -> None:
     tunnel_state_path = Path(args.tunnel_state_file)
     notify_state_path = Path(args.notify_state_file)
     notify_script = Path(args.notify_script)
+    tz = ZoneInfo(args.tz)
+    daily_hour, daily_minute = parse_daily_time(args.daily_time)
 
     current_url = get_current_public_url(tunnel_state_path)
     state = ensure_state_defaults(load_json(notify_state_path))
+    now_local = datetime.now(tz)
+    today = now_local.date().isoformat()
 
     if not state["initialized"]:
         state.update(
             {
                 "initialized": True,
                 "last_seen_url": current_url,
-                "last_notified_url": current_url,
                 "updated_at": now_iso(),
             }
         )
@@ -118,19 +148,19 @@ def run_once(args: argparse.Namespace) -> None:
         print(f"initialized notify baseline: {current_url or '(no active url)'}")
         return
 
-    changed = current_url is not None and current_url != state["last_notified_url"]
-    if changed:
+    if should_send_today(now_local, state, current_url, daily_hour, daily_minute):
         message = build_message(current_url)
         ok, output = send_notification(notify_script, args.session_key, message, args.timeout)
         if ok:
             state["last_notified_url"] = current_url
-            print(f"notification sent for updated url: {current_url}")
+            state["last_notified_day"] = today
+            print(f"daily notification sent for url: {current_url}")
         else:
-            print(f"notification failed for url: {current_url}")
+            print(f"daily notification failed for url: {current_url}")
             if output:
                 print(output)
     elif current_url != state["last_seen_url"]:
-        print(f"observed url/state change without notification: {state['last_seen_url']} -> {current_url}")
+        print(f"observed url rotation without immediate notify: {state['last_seen_url']} -> {current_url}")
 
     state["last_seen_url"] = current_url
     state["updated_at"] = now_iso()

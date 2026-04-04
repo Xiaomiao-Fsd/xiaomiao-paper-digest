@@ -7,7 +7,7 @@ Wants=network-online.target openclaw-gateway.service paper-digest-tunnel.service
 Type=simple
 WorkingDirectory=/home/XiaomiaoClaw/.openclaw/workspace
 Environment=PYTHONUNBUFFERED=1
-ExecStart=/usr/bin/python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_tunnel_notify.py --session-key agent:main:qqbot:direct:256539deaa7d9d8b88e512af979a8b6d --tunnel-state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_tunnel.json --notify-state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_tunnel_notify_state.json --poll-seconds 20 --timeout 120
+ExecStart=/usr/bin/python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_tunnel_notify.py --session-key agent:main:qqbot:direct:256539deaa7d9d8b88e512af979a8b6d --tunnel-state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_tunnel.json --notify-state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_tunnel_notify_state.json --poll-seconds 20 --timeout 120 --daily-time 08:30 --tz Asia/Shanghai
 Restart=always
 RestartSec=5
 
