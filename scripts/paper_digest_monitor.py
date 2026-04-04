@@ -145,7 +145,7 @@ WORKSPACE = Path("/home/XiaomiaoClaw/.openclaw/workspace")
 DEFAULT_REPORT_DIR = WORKSPACE / "reports" / "paper_digest"
 DEFAULT_HTML_FILE = DEFAULT_REPORT_DIR / "index.html"
 DEFAULT_JSON_FILE = DEFAULT_REPORT_DIR / "latest.json"
-DEFAULT_WEB_URL = "http://127.0.0.1:8091/paper_digest/index.html"
+DEFAULT_WEB_URL = "/paper_digest/index.html"
 
 
 @dataclass

@@ -1,0 +1,15 @@
+[Unit]
+Description=Paper Digest Public Tunnel (localhost.run)
+After=network-online.target paper-digest-web.service
+Wants=network-online.target paper-digest-web.service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/XiaomiaoClaw/.openclaw/workspace
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_tunnel.py --state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_tunnel.json --local-port 8091
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
