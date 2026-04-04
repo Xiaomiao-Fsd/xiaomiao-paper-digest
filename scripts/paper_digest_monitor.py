@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -20,11 +19,11 @@ UTC = timezone.utc
 CN_TZ = ZoneInfo("Asia/Shanghai")
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
 
-ARXIV_QUERY = "((all:transistor OR all:mosfet OR all:finfet OR all:cfet OR all:cmos OR all:\"gate-all-around\" OR all:nanosheet OR all:semiconductor OR all:microelectronic OR all:interconnect OR all:dielectric OR all:ferroelectric OR all:Intel OR all:TSMC) AND (cat:physics.app-ph OR cat:cond-mat.mtrl-sci OR cat:cond-mat.mes-hall OR cat:eess.EE OR cat:cond-mat.other))"
+ARXIV_QUERY = "((all:\"integrated circuit\" OR all:microelectronic OR all:microelectronics OR all:semiconductor OR all:\"semiconductor device\" OR all:wafer OR all:interconnect OR all:dielectric OR all:ferroelectric OR all:epitaxy OR all:transistor OR all:mosfet OR all:finfet OR all:cfet OR all:cmos OR all:\"gate-all-around\" OR all:nanosheet OR all:Intel OR all:TSMC) AND (cat:physics.app-ph OR cat:cond-mat.mtrl-sci OR cat:cond-mat.mes-hall OR cat:eess.EE OR cat:cond-mat.other))"
 SCI_ADV_ISSN = "2375-2548"
 NATURE_FEEDS = {
-    "Nature Electronics": "https://www.nature.com/natelectron.rss",
-    "Nature Materials": "https://www.nature.com/nmat.rss",
+    "Nature Electronics": "http://feeds.nature.com/natelectron/rss/current",
+    "Nature Materials": "http://feeds.nature.com/nmat/rss/current",
 }
 
 COMPANY_TERMS = {
@@ -76,6 +75,63 @@ MATERIAL_TERMS = [
     "hfo2",
     "high-k",
     "low-k",
+]
+BROAD_TERMS = [
+    "integrated circuit",
+    "integrated circuits",
+    "microelectronic",
+    "microelectronics",
+    "semiconductor",
+    "semiconductors",
+    "semiconductor device",
+    "chip",
+    "chips",
+    "wafer",
+    "interconnect",
+    "interconnects",
+    "dielectric",
+    "dielectrics",
+    "ferroelectric",
+    "epitaxy",
+    "transistor",
+    "transistors",
+    "mosfet",
+    "mosfets",
+    "finfet",
+    "finfets",
+    "cfet",
+    "cfets",
+    "cmos",
+    "nanosheet",
+    "nanosheets",
+    "gate-all-around",
+    "2d material",
+    "2d materials",
+    "gan",
+    "sic",
+]
+EXCLUDE_TERMS = [
+    "digital circuit",
+    "digital circuits",
+    "digital integrated circuit",
+    "digital integrated circuits",
+    "integrated circuit design",
+    "ic design",
+    "vlsi",
+    "ulsi",
+    "asic",
+    "fpga",
+    "logic synthesis",
+    "rtl",
+    "register-transfer",
+    "standard cell",
+    "place and route",
+    "physical design",
+    "eda tool",
+    "electronic design automation",
+    "microarchitecture",
+    "processor architecture",
+    "cpu architecture",
 ]
 SOURCE_BONUS = {
     "arXiv": 0,
@@ -174,16 +230,23 @@ def child_text(elem: ET.Element, name: str) -> str:
     return ""
 
 
-def get_with_retries(session: requests.Session, url: str, **kwargs) -> requests.Response:
+def get_with_retries(session: requests.Session, url: str, proxy: str = "", **kwargs) -> requests.Response:
     last_error: Exception | None = None
-    for attempt in range(3):
-        try:
-            resp = session.get(url, **kwargs)
-            resp.raise_for_status()
-            return resp
-        except Exception as exc:  # pragma: no cover - best effort retry path
-            last_error = exc
-            time.sleep(1 + attempt)
+    modes = [None]
+    if proxy:
+        modes.append({"http": proxy, "https": proxy})
+    for proxies in modes:
+        for attempt in range(3):
+            try:
+                req_kwargs = dict(kwargs)
+                if proxies:
+                    req_kwargs["proxies"] = proxies
+                resp = session.get(url, **req_kwargs)
+                resp.raise_for_status()
+                return resp
+            except Exception as exc:  # pragma: no cover - best effort retry path
+                last_error = exc
+                time.sleep(1 + attempt)
     assert last_error is not None
     raise last_error
 
@@ -209,12 +272,11 @@ def save_state(path: Path, state: dict) -> None:
 def build_session(proxy: str) -> requests.Session:
     s = requests.Session()
     s.headers.update({"User-Agent": UA})
-    if proxy:
-        s.proxies.update({"http": proxy, "https": proxy})
+    s.trust_env = False
     return s
 
 
-def fetch_arxiv(session: requests.Session, cutoff: datetime) -> list[Paper]:
+def fetch_arxiv(session: requests.Session, cutoff: datetime, proxy: str) -> list[Paper]:
     params = {
         "search_query": ARXIV_QUERY,
         "start": 0,
@@ -226,7 +288,7 @@ def fetch_arxiv(session: requests.Session, cutoff: datetime) -> list[Paper]:
     resp = None
     for url in ("https://export.arxiv.org/api/query", "http://export.arxiv.org/api/query"):
         try:
-            resp = get_with_retries(session, url, params=params, timeout=30)
+            resp = get_with_retries(session, url, proxy=proxy, params=params, timeout=30)
             break
         except Exception as exc:
             last_error = exc
@@ -257,7 +319,7 @@ def fetch_arxiv(session: requests.Session, cutoff: datetime) -> list[Paper]:
     return papers
 
 
-def fetch_science_advances(session: requests.Session, cutoff: datetime) -> list[Paper]:
+def fetch_science_advances(session: requests.Session, cutoff: datetime, proxy: str) -> list[Paper]:
     url = f"https://api.crossref.org/journals/{SCI_ADV_ISSN}/works"
     params = {
         "filter": f"from-pub-date:{cutoff.date().isoformat()}",
@@ -265,7 +327,7 @@ def fetch_science_advances(session: requests.Session, cutoff: datetime) -> list[
         "order": "desc",
         "rows": 40,
     }
-    resp = get_with_retries(session, url, params=params, timeout=30)
+    resp = get_with_retries(session, url, proxy=proxy, params=params, timeout=30)
     items = resp.json().get("message", {}).get("items", [])
     papers: list[Paper] = []
     for item in items:
@@ -296,22 +358,8 @@ def fetch_science_advances(session: requests.Session, cutoff: datetime) -> list[
 
 
 def fetch_nature_feed(session: requests.Session, source: str, url: str, cutoff: datetime, proxy: str) -> list[Paper]:
-    cmd = ["curl", "-sS", "--http1.1", "--max-time", "30"]
-    if proxy:
-        cmd.extend(["--proxy", proxy])
-    cmd.append(url)
-    last_error: str | None = None
-    resp_text = ""
-    for attempt in range(3):
-        proc = subprocess.run(cmd, text=True, capture_output=True)
-        if proc.returncode == 0 and proc.stdout.strip():
-            resp_text = proc.stdout
-            break
-        last_error = proc.stderr.strip() or f"curl exit {proc.returncode}"
-        time.sleep(1 + attempt)
-    if not resp_text:
-        raise RuntimeError(last_error or f"failed to fetch {source}")
-    root = ET.fromstring(resp_text)
+    resp = get_with_retries(session, url, proxy=proxy, timeout=30)
+    root = ET.fromstring(resp.text)
     papers: list[Paper] = []
     for elem in root.iter():
         if localname(elem.tag) != "item":
@@ -361,12 +409,18 @@ def pretty_term(term: str) -> str:
         "gate all around": "GAA",
         "gaa": "GAA",
         "mosfet": "MOSFET",
+        "mosfets": "MOSFET",
         "fet": "FET",
         "finfet": "FinFET",
+        "finfets": "FinFET",
         "cfet": "CFET",
+        "cfets": "CFET",
         "cmos": "CMOS",
         "tft": "TFT",
+        "transistor": "transistor",
+        "transistors": "transistor",
         "2d material": "2D materials",
+        "2d materials": "2D materials",
         "hfo2": "HfO2",
         "gan": "GaN",
         "sic": "SiC",
@@ -374,8 +428,13 @@ def pretty_term(term: str) -> str:
         "low-k": "low-k",
         "microelectronic": "microelectronics",
         "microelectronics": "microelectronics",
+        "semiconductor": "semiconductor",
+        "semiconductors": "semiconductor",
         "contact resistance": "contact resistance",
         "interconnect": "interconnect",
+        "interconnects": "interconnect",
+        "dielectric": "dielectric",
+        "dielectrics": "dielectric",
         "ferroelectric": "ferroelectric",
     }
     return mapping.get(term.lower(), term)
@@ -396,11 +455,18 @@ def score_paper(paper: Paper) -> Paper | None:
             priority += 2
     highlights.extend(company_hits)
 
+    broad_title_hits = unique_terms(title_text, BROAD_TERMS)
+    broad_body_hits = [t for t in unique_terms(body_text, BROAD_TERMS) if t not in broad_title_hits]
+    negative_title_hits = unique_terms(title_text, EXCLUDE_TERMS)
+    negative_body_hits = [t for t in unique_terms(body_text, EXCLUDE_TERMS) if t not in negative_title_hits]
+
     device_title_hits = unique_terms(title_text, DEVICE_TERMS)
     device_body_hits = [t for t in unique_terms(body_text, DEVICE_TERMS) if t not in device_title_hits]
     material_title_hits = unique_terms(title_text, MATERIAL_TERMS)
     material_body_hits = [t for t in unique_terms(body_text, MATERIAL_TERMS) if t not in material_title_hits]
 
+    score += min(3, len(broad_title_hits)) * 1
+    score += min(2, len(broad_body_hits)) * 1
     score += min(4, len(device_title_hits)) * 4
     score += min(3, len(device_body_hits)) * 2
     score += min(4, len(material_title_hits)) * 2
@@ -416,9 +482,19 @@ def score_paper(paper: Paper) -> Paper | None:
         if pretty not in highlights:
             highlights.append(pretty)
 
+    has_broad = bool(broad_title_hits or broad_body_hits)
     has_device = bool(device_title_hits or device_body_hits)
     has_material = bool(material_title_hits or material_body_hits)
     has_company = bool(company_hits)
+
+    if not has_company and not has_broad:
+        return None
+
+    # 用户希望范围先放宽到微电子 / IC，但过滤掉偏数字电路 / IC 设计方向的内容。
+    if negative_title_hits and not (has_company or device_title_hits or material_title_hits):
+        return None
+    if len(negative_body_hits) >= 2 and not (has_company or device_title_hits or material_title_hits):
+        return None
 
     if not has_company and not has_device and not has_material:
         return None
@@ -486,11 +562,11 @@ def main() -> int:
     errors: list[str] = []
 
     try:
-        all_papers.extend(fetch_arxiv(session, cutoff))
+        all_papers.extend(fetch_arxiv(session, cutoff, args.proxy))
     except Exception:
         errors.append("arXiv")
     try:
-        all_papers.extend(fetch_science_advances(session, cutoff))
+        all_papers.extend(fetch_science_advances(session, cutoff, args.proxy))
     except Exception:
         errors.append("Science Advances")
     for source, url in NATURE_FEEDS.items():

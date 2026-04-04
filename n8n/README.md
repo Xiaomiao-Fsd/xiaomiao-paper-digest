@@ -51,7 +51,7 @@
 
 ## `Microelectronics_Paper_Digest.workflow.json`
 
-用途：每天早上生成一条“微电子材料 / 晶体管论文晨报”，优先关注 Intel / TSMC 相关内容，并额外纳入 Science Advances、Nature Electronics、Nature Materials。
+用途：每天早上生成一条“微电子 / 集成电路相关论文晨报”。策略上先宽泛覆盖微电子与集成电路方向，再过滤偏数字电路 / IC 设计的话题，最后优先保留晶体管与材料相关论文，并额外关注 Intel / TSMC 相关内容。
 
 ### 当前 workflow 已完成
 
@@ -80,12 +80,14 @@
 它会这样做：
 
 1. 每天早上拉取各来源最新论文
-2. 按“晶体管 / FET / CMOS / GAA / 微电子材料”做关键词打分
-3. 对 Intel / TSMC 显式提及项提高优先级
-4. 生成单条中文晨报消息
-5. 调用本地 helper：
+2. 先按“微电子 / 集成电路”相关关键词做宽泛召回
+3. 过滤偏数字电路 / IC 设计方向的内容
+4. 再按“晶体管 / FET / CMOS / GAA / 材料”做优先级打分
+5. 对 Intel / TSMC 显式提及项进一步提高优先级
+6. 生成单条中文晨报消息
+7. 调用本地 helper：
    - `/home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py`
-6. 通过 OpenClaw 把消息送回当前这个 QQ 私聊会话
+8. 通过 OpenClaw 把消息送回当前这个 QQ 私聊会话
 
 ### 依赖的本地脚本
 
