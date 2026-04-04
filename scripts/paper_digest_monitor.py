@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from html import escape, unescape
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 import xml.etree.ElementTree as ET
 
@@ -159,6 +160,7 @@ class Paper:
     score: int = 0
     priority: int = 0
     highlights: list[str] = field(default_factory=list)
+    abstract_cn: str = ""
     overview_cn: str = ""
 
 
@@ -450,22 +452,154 @@ def pretty_term(term: str) -> str:
     return mapping.get(term.lower(), term)
 
 
-def build_overview_cn(paper: Paper) -> str:
-    tags = [tag for tag in paper.highlights if tag not in ("Intel", "TSMC")]
-    focus = "、".join(tags[:3]) if tags else "微电子器件与材料"
+def term_cn(term: str) -> str:
+    mapping = {
+        "Intel": "Intel",
+        "TSMC": "TSMC",
+        "transistor": "晶体管",
+        "MOSFET": "MOSFET",
+        "FET": "FET",
+        "FinFET": "FinFET",
+        "CFET": "CFET",
+        "CMOS": "CMOS",
+        "TFT": "TFT",
+        "GAA": "GAA / 全环栅",
+        "2D materials": "二维材料",
+        "microelectronics": "微电子",
+        "semiconductor": "半导体",
+        "contact resistance": "接触电阻",
+        "interconnect": "互连",
+        "dielectric": "介电材料",
+        "ferroelectric": "铁电材料",
+        "GaN": "GaN",
+        "SiC": "SiC",
+        "high-k": "high-k 介质",
+        "low-k": "low-k 介质",
+        "HfO2": "HfO2",
+    }
+    return mapping.get(term, term)
+
+
+def split_sentences(text: str) -> list[str]:
+    text = normalize_space(text)
+    if not text:
+        return []
+    return [part.strip() for part in re.split(r"(?<=[.!?;])\s+", text) if part.strip()]
+
+
+def focus_terms_cn(paper: Paper) -> str:
+    tags = [term_cn(tag) for tag in paper.highlights if tag not in ("Intel", "TSMC")]
+    if not tags:
+        return "微电子器件与材料"
+    return "、".join(tags[:3])
+
+
+def company_suffix_cn(paper: Paper) -> str:
     company = [tag for tag in paper.highlights if tag in ("Intel", "TSMC")]
-    company_text = f"，并与{' / '.join(company)}相关" if company else ""
-    abstract_hint = short(strip_html(paper.summary), 90) if paper.summary else "摘要未提供太多细节"
-    return f"这篇工作聚焦{focus}{company_text}，从题目与摘要看核心内容是：{abstract_hint}。"
+    return f"，并与{' / '.join(company)}相关" if company else ""
 
 
-def render_html(items: list[Paper], errors: list[str], run_dt: datetime) -> str:
+def infer_action_cn(text: str) -> str:
+    lowered = text.lower()
+    rules = [
+        (["propose", "present", "introduce", "develop"], "提出并实现一套新的方案或器件思路"),
+        (["demonstrate", "show", "report", "reveal"], "展示器件/材料方案的关键结果"),
+        (["investigate", "study", "explore", "analyze"], "系统研究其机理、结构或性能变化"),
+        (["fabricate", "process", "deposition", "epitaxy"], "完成制备流程并结合实验进行验证"),
+        (["integrate", "integration", "coupling", "compatible"], "强调与现有工艺或系统的集成兼容性"),
+    ]
+    for needles, text_cn in rules:
+        if any(needle in lowered for needle in needles):
+            return text_cn
+    return "围绕目标器件与材料给出实验、分析与性能说明"
+
+
+def infer_result_cn(text: str) -> str:
+    lowered = text.lower()
+    hints = []
+    rules = [
+        (["performance", "high performance", "enhance", "improve"], "性能提升"),
+        (["efficiency", "coupling", "light-emitting", "emission"], "效率/耦合表现"),
+        (["reliability", "stable", "stability", "robust"], "可靠性与稳定性"),
+        (["scaling", "scaled", "sub-", "nanosheet", "gate-all-around"], "先进尺度下的可扩展性"),
+        (["low power", "power consumption", "energy"], "功耗或能效表现"),
+        (["contact resistance", "interconnect", "resistance"], "接触/互连相关指标"),
+        (["integration", "compatible", "silicon", "cmos"], "与既有工艺平台的集成价值"),
+    ]
+    for needles, label in rules:
+        if any(needle in lowered for needle in needles):
+            hints.append(label)
+    if not hints:
+        return "器件性能、实验结果和潜在应用价值"
+    uniq = list(dict.fromkeys(hints))
+    return "、".join(uniq[:3])
+
+
+def infer_body_flow_cn(text: str) -> str:
+    lowered = text.lower()
+    steps = []
+    if any(word in lowered for word in ["structure", "architecture", "device", "stack"]):
+        steps.append("器件结构与设计思路")
+    if any(word in lowered for word in ["fabricate", "process", "deposition", "etch", "epitaxy", "wafer"]):
+        steps.append("制备流程与工艺条件")
+    if any(word in lowered for word in ["measure", "measurement", "characterization", "electrical", "optical"]):
+        steps.append("电学/光学表征与测试结果")
+    if any(word in lowered for word in ["simulation", "model", "mechanism", "physics"]):
+        steps.append("机理分析或模型解释")
+    if not steps:
+        return "背景问题、方案设计、结果验证和应用讨论"
+    uniq = list(dict.fromkeys(steps))
+    return "、".join(uniq[:4])
+
+
+def build_abstract_cn(paper: Paper) -> str:
+    text = strip_html(paper.summary)
+    focus = focus_terms_cn(paper)
+    company_text = company_suffix_cn(paper)
+    action = infer_action_cn(f"{paper.title} {text}")
+    result = infer_result_cn(f"{paper.title} {text}")
+    if not text:
+        return f"该来源没有给出英文摘要；从标题看，论文主要围绕{focus}{company_text}展开，重点可能落在{result}。"
+    return f"这段摘要主要在说：作者{action}，研究对象是{focus}{company_text}；摘要里最值得先关注的是{result}。"
+
+
+def build_overview_cn(paper: Paper) -> str:
+    focus = focus_terms_cn(paper)
+    company_text = company_suffix_cn(paper)
+    text = strip_html(paper.summary)
+    flow = infer_body_flow_cn(f"{paper.title} {text}")
+    result = infer_result_cn(f"{paper.title} {text}")
+    if not text:
+        return f"从标题推测，正文大概率会先交代{focus}{company_text}相关背景，再展开{flow}，最后落到{result}与应用意义。"
+    return f"如果按正文展开来看，这篇文章大概率会先说明{focus}{company_text}的研究背景与问题设置，再依次介绍{flow}，最后用{result}来支撑其结论与应用价值。"
+
+
+def sibling_url(base_url: str, filename: str) -> str:
+    parts = urlsplit(base_url)
+    path = parts.path or "/"
+    if path.endswith("/"):
+        new_path = path + filename
+    else:
+        idx = path.rfind("/")
+        new_path = (path[: idx + 1] if idx >= 0 else "/") + filename
+    return urlunsplit((parts.scheme, parts.netloc, new_path, parts.query, parts.fragment))
+
+
+def render_error_html(errors: list[str]) -> str:
+    if not errors:
+        return ""
+    return '<div class="note warning">本次抓取异常：' + escape("、".join(errors)) + "</div>"
+
+
+def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime, mobile_url: str) -> str:
     date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
     rows = []
     for idx, item in enumerate(items, 1):
         authors = escape(", ".join(item.authors)) if item.authors else "—"
-        keywords = "、".join(item.highlights) if item.highlights else "—"
+        keywords = item.highlights or []
+        keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in keywords) if keywords else "—"
         abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
+        abstract_cn = escape(item.abstract_cn or "—")
         overview = escape(item.overview_cn or "—")
         title = escape(item.title)
         link = escape(item.url)
@@ -477,72 +611,193 @@ def render_html(items: list[Paper], errors: list[str], run_dt: datetime) -> str:
               <td>{escape(item.published)}</td>
               <td><a href=\"{link}\" target=\"_blank\" rel=\"noopener noreferrer\">{title}</a></td>
               <td>{authors}</td>
-              <td>{escape(keywords)}</td>
+              <td>{keyword_html}</td>
               <td class=\"abstract\">{abstract}</td>
+              <td class=\"abstract-cn\">{abstract_cn}</td>
               <td class=\"overview\">{overview}</td>
             </tr>
             """.strip()
         )
 
     if not rows:
-        rows.append(
-            "<tr><td colspan=\"8\">今天暂时没有命中的新论文。</td></tr>"
-        )
-
-    error_html = ""
-    if errors:
-        error_html = (
-            '<div class="note warning">本次抓取异常：' + escape("、".join(errors)) + "</div>"
-        )
+        rows.append('<tr><td colspan="9">今天暂时没有命中的新论文。</td></tr>')
 
     return f"""<!doctype html>
 <html lang=\"zh-CN\">
 <head>
   <meta charset=\"utf-8\" />
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
-  <title>微电子论文晨报</title>
+  <title>微电子论文晨报｜PC版</title>
   <style>
+    :root {{ color-scheme: dark; }}
     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: #0b1020; color: #eaf0ff; }}
     h1 {{ margin: 0 0 8px; font-size: 28px; }}
     .sub {{ color: #a9b6d3; margin-bottom: 18px; }}
+    .topbar {{ display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }}
+    .nav a {{ color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-left: 8px; }}
     .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: #18203a; }}
     .warning {{ background: #3a2318; color: #ffd4b5; }}
-    table {{ width: 100%; border-collapse: collapse; background: #121933; border-radius: 14px; overflow: hidden; }}
-    th, td {{ border: 1px solid #243054; padding: 10px 12px; vertical-align: top; text-align: left; }}
-    th {{ background: #18203a; position: sticky; top: 0; }}
+    .meta {{ display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 18px; color: #b6c2de; }}
+    .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #22305a; color: #dce6ff; font-size: 12px; margin-right: 6px; }}
+    .table-wrap {{ overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px #243054 inset; }}
+    table {{ width: 100%; min-width: 1900px; border-collapse: collapse; background: #121933; }}
+    th, td {{ border: 1px solid #243054; padding: 12px; vertical-align: top; text-align: left; }}
+    th {{ background: #18203a; position: sticky; top: 0; z-index: 1; }}
     tr:nth-child(even) td {{ background: #0f1730; }}
     a {{ color: #8bc4ff; text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
-    .abstract, .overview {{ white-space: pre-wrap; min-width: 280px; }}
-    .meta {{ display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 18px; color: #b6c2de; }}
-    .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #22305a; color: #dce6ff; font-size: 12px; margin-right: 6px; }}
+    .abstract {{ min-width: 360px; white-space: pre-wrap; line-height: 1.55; }}
+    .abstract-cn, .overview {{ min-width: 300px; white-space: pre-wrap; line-height: 1.6; }}
+    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; }}
+    .hint {{ color: #8fa1c9; font-size: 13px; margin-top: 10px; }}
   </style>
 </head>
 <body>
-  <h1>微电子 / 集成电路论文晨报</h1>
-  <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
+  <div class=\"topbar\">
+    <div>
+      <h1>微电子 / 集成电路论文晨报 · PC版</h1>
+      <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
+    </div>
+    <div class=\"nav\"><a href=\"{escape(mobile_url)}\">切到手机版</a></div>
+  </div>
   <div class=\"meta\">
     <div><span class=\"badge\">来源</span>arXiv / Science Advances / Nature Electronics / Nature Materials</div>
     <div><span class=\"badge\">策略</span>先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
   </div>
-  {error_html}
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>来源</th>
-        <th>日期</th>
-        <th>标题 / 链接</th>
-        <th>作者</th>
-        <th>关键词</th>
-        <th>Abstract 原文</th>
-        <th>正文概述</th>
-      </tr>
-    </thead>
-    <tbody>
-      {''.join(rows)}
-    </tbody>
-  </table>
+  {render_error_html(errors)}
+  <div class=\"table-wrap\">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>来源</th>
+          <th>日期</th>
+          <th>标题 / 链接</th>
+          <th>作者</th>
+          <th>关键词</th>
+          <th>Abstract 原文</th>
+          <th>中文摘要概括</th>
+          <th>正文概括（基于标题/摘要）</th>
+        </tr>
+      </thead>
+      <tbody>
+        {''.join(rows)}
+      </tbody>
+    </table>
+  </div>
+  <div class=\"hint\">说明：右侧“正文概括”目前是基于标题与摘要自动生成的阅读导向版总结；如果后面要进一步抓正文，我也可以继续补。</div>
+</body>
+</html>
+"""
+
+
+def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, desktop_url: str) -> str:
+    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    cards = []
+    for idx, item in enumerate(items, 1):
+        authors = escape(", ".join(item.authors)) if item.authors else "—"
+        keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in (item.highlights or [])) or '<span class="kw muted">无高亮关键词</span>'
+        cards.append(
+            f"""
+            <article class=\"card\">
+              <div class=\"card-head\">
+                <div class=\"index\">#{idx}</div>
+                <div class=\"meta-line\">{escape(item.source)} · {escape(item.published)}</div>
+              </div>
+              <h2><a href=\"{escape(item.url)}\" target=\"_blank\" rel=\"noopener noreferrer\">{escape(item.title)}</a></h2>
+              <div class=\"authors\">作者：{authors}</div>
+              <div class=\"keywords\">{keyword_html}</div>
+              <section>
+                <h3>Abstract 原文</h3>
+                <p>{escape(item.summary or '（该来源未提供 abstract / summary）')}</p>
+              </section>
+              <section>
+                <h3>中文摘要概括</h3>
+                <p>{escape(item.abstract_cn or '—')}</p>
+              </section>
+              <section>
+                <h3>正文概括（基于标题/摘要）</h3>
+                <p>{escape(item.overview_cn or '—')}</p>
+              </section>
+            </article>
+            """.strip()
+        )
+
+    if not cards:
+        cards.append('<article class="card"><p>今天暂时没有命中的新论文。</p></article>')
+
+    return f"""<!doctype html>
+<html lang=\"zh-CN\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />
+  <title>微电子论文晨报｜手机版</title>
+  <style>
+    :root {{ color-scheme: dark; }}
+    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; }}
+    .shell {{ padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }}
+    h1 {{ font-size: 24px; margin: 0 0 6px; }}
+    .sub {{ color: #a9b6d3; margin-bottom: 12px; font-size: 14px; }}
+    .nav a {{ display: inline-block; color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-bottom: 14px; }}
+    .meta, .note {{ background: #121933; border: 1px solid #243054; border-radius: 14px; padding: 12px; margin-bottom: 12px; }}
+    .warning {{ background: #3a2318; color: #ffd4b5; }}
+    .card {{ background: #121933; border: 1px solid #243054; border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }}
+    .card-head {{ display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }}
+    .index {{ font-weight: 700; color: #7cc2ff; }}
+    h2 {{ font-size: 18px; line-height: 1.45; margin: 0 0 10px; }}
+    h2 a {{ color: #eef3ff; text-decoration: none; }}
+    h3 {{ margin: 14px 0 6px; font-size: 15px; color: #8bc4ff; }}
+    p {{ margin: 0; white-space: pre-wrap; line-height: 1.65; color: #e4ebff; font-size: 14px; }}
+    .authors {{ color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }}
+    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; font-size: 12px; }}
+    .muted {{ color: #b7c6e6; }}
+    .hint {{ color: #8fa1c9; font-size: 12px; margin-top: 8px; line-height: 1.6; }}
+  </style>
+</head>
+<body>
+  <div class=\"shell\">
+    <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
+    <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
+    <div class=\"nav\"><a href=\"{escape(desktop_url)}\">切到PC版</a></div>
+    <div class=\"meta\">来源：arXiv / Science Advances / Nature Electronics / Nature Materials<br>策略：先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
+    {render_error_html(errors)}
+    {''.join(cards)}
+    <div class=\"hint\">说明：正文概括目前是基于标题与摘要自动生成，适合手机快速扫读。</div>
+  </div>
+</body>
+</html>
+"""
+
+
+def render_index_html(desktop_url: str, mobile_url: str) -> str:
+    return f"""<!doctype html>
+<html lang=\"zh-CN\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>微电子论文晨报</title>
+  <script>
+    (function () {{
+      var mobile = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
+      window.location.replace(mobile ? {json.dumps(mobile_url)} : {json.dumps(desktop_url)});
+    }})();
+  </script>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; display: grid; place-items: center; min-height: 100vh; margin: 0; }}
+    .box {{ background: #121933; border: 1px solid #243054; border-radius: 18px; padding: 24px; width: min(92vw, 520px); }}
+    a {{ color: #8bc4ff; }}
+  </style>
+</head>
+<body>
+  <div class=\"box\">
+    <h1>微电子论文晨报</h1>
+    <p>正在根据设备跳转到合适版本。</p>
+    <p>如果没有自动跳转，可以手动选择：</p>
+    <ul>
+      <li><a href=\"{escape(desktop_url)}\">PC版</a></li>
+      <li><a href=\"{escape(mobile_url)}\">手机版</a></li>
+    </ul>
+  </div>
 </body>
 </html>
 """
@@ -659,7 +914,11 @@ def main() -> int:
     args = parse_args()
     state_path = Path(args.state_file)
     html_path = Path(args.html_file)
+    desktop_html_path = html_path.with_name("desktop.html")
+    mobile_html_path = html_path.with_name("mobile.html")
     json_path = Path(args.json_file)
+    desktop_url = sibling_url(args.web_url, "desktop.html")
+    mobile_url = sibling_url(args.web_url, "mobile.html")
     state = load_state(state_path)
     seen_ids: dict[str, int] = {k: int(v) for k, v in state.get("seen_ids", {}).items() if isinstance(v, (int, float, str))}
     now_ts = int(time.time())
@@ -691,6 +950,7 @@ def main() -> int:
 
     run_dt = datetime.now(UTC)
     for paper in selected:
+        paper.abstract_cn = build_abstract_cn(paper)
         paper.overview_cn = build_overview_cn(paper)
     message = build_message(selected, errors, run_dt)
 
@@ -717,10 +977,14 @@ def main() -> int:
         "papers": [asdict(paper) for paper in selected],
         "errors": errors,
         "report_url": args.web_url,
+        "report_url_pc": desktop_url,
+        "report_url_mobile": mobile_url,
         "generated_at": run_dt.isoformat(),
     }
 
-    html_path.write_text(render_html(selected, errors, run_dt), encoding="utf-8")
+    html_path.write_text(render_index_html(desktop_url, mobile_url), encoding="utf-8")
+    desktop_html_path.write_text(render_desktop_html(selected, errors, run_dt, mobile_url), encoding="utf-8")
+    mobile_html_path.write_text(render_mobile_html(selected, errors, run_dt, desktop_url), encoding="utf-8")
     json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(json.dumps(payload, ensure_ascii=False))
