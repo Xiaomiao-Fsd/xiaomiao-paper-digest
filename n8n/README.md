@@ -46,3 +46,54 @@
 ### 说明
 
 这个方案仍然复用 OpenClaw 做最终 QQ 投递，因此不会直接绕过现有消息路由。
+
+---
+
+## `Microelectronics_Paper_Digest.workflow.json`
+
+用途：每天早上生成一条“微电子材料 / 晶体管论文晨报”，优先关注 Intel / TSMC 相关内容，并额外纳入 Science Advances、Nature Electronics、Nature Materials。
+
+### 当前 workflow 已完成
+
+- 每天 08:30 定时执行
+- 通过本机 Clash 代理 `http://127.0.0.1:7897`
+- 调用工作区脚本：
+  - `/home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_monitor.py`
+- 使用状态文件去重：
+  - `/home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_state.json`
+- 汇总来源：
+  - arXiv
+  - Science Advances（Crossref）
+  - Nature Electronics RSS
+  - Nature Materials RSS
+- 输出字段：
+  - `new_count`
+  - `selected_count`
+  - `message`
+  - `papers`
+  - `errors`
+
+### 现在已经直接接好 QQ 通知
+
+当前 JSON 版本已经包含最终通知节点，不需要再手动补最后一步。
+
+它会这样做：
+
+1. 每天早上拉取各来源最新论文
+2. 按“晶体管 / FET / CMOS / GAA / 微电子材料”做关键词打分
+3. 对 Intel / TSMC 显式提及项提高优先级
+4. 生成单条中文晨报消息
+5. 调用本地 helper：
+   - `/home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py`
+6. 通过 OpenClaw 把消息送回当前这个 QQ 私聊会话
+
+### 依赖的本地脚本
+
+- 论文晨报脚本：
+  - `/home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_monitor.py`
+- QQ 通知 helper：
+  - `/home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py`
+
+### 说明
+
+这个方案默认使用更贴近目标方向的 Nature 系列来源：`Nature Electronics` 和 `Nature Materials`。如果之后想切到别的 Nature 子刊或扩展更多期刊，可以直接在脚本和 workflow 上继续加源。

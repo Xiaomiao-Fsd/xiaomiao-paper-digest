@@ -1,0 +1,150 @@
+{
+  "name": "Daily Microelectronics Paper Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 8,
+              "minute": 30
+            }
+          ]
+        }
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-111111111111",
+      "name": "Every Morning 08:30",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "command": "python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/paper_digest_monitor.py --state-file /home/XiaomiaoClaw/.openclaw/workspace/.openclaw/paper_digest_state.json --proxy http://127.0.0.1:7897 --days-back 7 --max-items 8"
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-222222222222",
+      "name": "Build Paper Digest",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.stdout || '';\nconst start = raw.indexOf('{');\nconst end = raw.lastIndexOf('}');\nif (start === -1 || end === -1) {\n  throw new Error('No JSON object found in command stdout');\n}\nconst data = JSON.parse(raw.slice(start, end + 1));\nreturn [{ json: data }];"
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-333333333333",
+      "name": "Parse Digest JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: { ...item, message_b64: Buffer.from(item.message || '', 'utf8').toString('base64') } }];"
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-444444444444",
+      "name": "Encode Message Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 300]
+    },
+    {
+      "parameters": {
+        "command": "={{ `python3 /home/XiaomiaoClaw/.openclaw/workspace/scripts/openclaw_notify_session.py --session-key agent:main:qqbot:direct:256539deaa7d9d8b88e512af979a8b6d --message-b64 ${$json.message_b64}` }}"
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-555555555555",
+      "name": "Notify QQ via OpenClaw",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "content": "## Daily paper digest\nThis workflow sends a morning digest focused on microelectronics materials and transistor-related papers.\n\nSources:\n1. arXiv (recent preprints in app-physics / materials / EE categories)\n2. Science Advances (Crossref journal feed)\n3. Nature Electronics RSS\n4. Nature Materials RSS\n\nPriority:\n- Explicit Intel / TSMC mentions\n- Transistor / FET / CMOS / GAA / nanosheet terms\n- Microelectronics materials keywords\n\nDelivery:\n- one QQ message via OpenClaw helper script\n- runs every day at 08:30 (local timezone)\n",
+        "height": 360,
+        "width": 420,
+        "color": 6
+      },
+      "id": "9d0d8f62-27fb-4d6d-a0e0-666666666666",
+      "name": "How to Use",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [980, 20]
+    }
+  ],
+  "connections": {
+    "Every Morning 08:30": {
+      "main": [
+        [
+          {
+            "node": "Build Paper Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Paper Digest": {
+      "main": [
+        [
+          {
+            "node": "Parse Digest JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Digest JSON": {
+      "main": [
+        [
+          {
+            "node": "Encode Message Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Encode Message Base64": {
+      "main": [
+        [
+          {
+            "node": "Notify QQ via OpenClaw",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "papers"
+    },
+    {
+      "name": "arxiv"
+    },
+    {
+      "name": "microelectronics"
+    },
+    {
+      "name": "qq"
+    }
+  ],
+  "active": true,
+  "versionId": "a84ecf92-5e67-4f0f-9f7d-777777777777",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "xiaomiaoclaw-local"
+  },
+  "id": "DailyMicroelectronicsPaperDigest"
+}
