@@ -11,6 +11,8 @@ if [[ ! -x "$NODE" || ! -f "$N8N" ]]; then
   exit 1
 fi
 
+export TZ=Asia/Shanghai
+export GENERIC_TIMEZONE=Asia/Shanghai
 export N8N_USER_FOLDER="$WORKSPACE/.n8n-data"
 export N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false
 export N8N_RUNNERS_ENABLED=true
