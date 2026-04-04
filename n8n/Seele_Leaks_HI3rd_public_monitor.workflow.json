@@ -236,7 +236,7 @@
       "name": "qq"
     }
   ],
-  "active": false,
+  "active": true,
   "versionId": "7f9d4e02-70fe-4f30-b812-7f6f72d50002",
   "meta": {
     "templateCredsSetupCompleted": true,
