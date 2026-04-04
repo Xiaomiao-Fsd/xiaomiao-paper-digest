@@ -7,7 +7,7 @@ import re
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
-from html import unescape
+from html import escape, unescape
 from pathlib import Path
 from typing import Iterable
 from zoneinfo import ZoneInfo
@@ -140,6 +140,12 @@ SOURCE_BONUS = {
     "Nature Materials": 2,
 }
 
+WORKSPACE = Path("/home/XiaomiaoClaw/.openclaw/workspace")
+DEFAULT_REPORT_DIR = WORKSPACE / "reports" / "paper_digest"
+DEFAULT_HTML_FILE = DEFAULT_REPORT_DIR / "index.html"
+DEFAULT_JSON_FILE = DEFAULT_REPORT_DIR / "latest.json"
+DEFAULT_WEB_URL = "http://127.0.0.1:8091/paper_digest/index.html"
+
 
 @dataclass
 class Paper:
@@ -153,6 +159,7 @@ class Paper:
     score: int = 0
     priority: int = 0
     highlights: list[str] = field(default_factory=list)
+    overview_cn: str = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -161,6 +168,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--proxy", default="")
     ap.add_argument("--days-back", type=int, default=7)
     ap.add_argument("--max-items", type=int, default=8)
+    ap.add_argument("--html-file", default=str(DEFAULT_HTML_FILE))
+    ap.add_argument("--json-file", default=str(DEFAULT_JSON_FILE))
+    ap.add_argument("--web-url", default=DEFAULT_WEB_URL)
     return ap.parse_args()
 
 
@@ -440,6 +450,104 @@ def pretty_term(term: str) -> str:
     return mapping.get(term.lower(), term)
 
 
+def build_overview_cn(paper: Paper) -> str:
+    tags = [tag for tag in paper.highlights if tag not in ("Intel", "TSMC")]
+    focus = "、".join(tags[:3]) if tags else "微电子器件与材料"
+    company = [tag for tag in paper.highlights if tag in ("Intel", "TSMC")]
+    company_text = f"，并与{' / '.join(company)}相关" if company else ""
+    abstract_hint = short(strip_html(paper.summary), 90) if paper.summary else "摘要未提供太多细节"
+    return f"这篇工作聚焦{focus}{company_text}，从题目与摘要看核心内容是：{abstract_hint}。"
+
+
+def render_html(items: list[Paper], errors: list[str], run_dt: datetime) -> str:
+    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    rows = []
+    for idx, item in enumerate(items, 1):
+        authors = escape(", ".join(item.authors)) if item.authors else "—"
+        keywords = "、".join(item.highlights) if item.highlights else "—"
+        abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
+        overview = escape(item.overview_cn or "—")
+        title = escape(item.title)
+        link = escape(item.url)
+        rows.append(
+            f"""
+            <tr>
+              <td>{idx}</td>
+              <td>{escape(item.source)}</td>
+              <td>{escape(item.published)}</td>
+              <td><a href=\"{link}\" target=\"_blank\" rel=\"noopener noreferrer\">{title}</a></td>
+              <td>{authors}</td>
+              <td>{escape(keywords)}</td>
+              <td class=\"abstract\">{abstract}</td>
+              <td class=\"overview\">{overview}</td>
+            </tr>
+            """.strip()
+        )
+
+    if not rows:
+        rows.append(
+            "<tr><td colspan=\"8\">今天暂时没有命中的新论文。</td></tr>"
+        )
+
+    error_html = ""
+    if errors:
+        error_html = (
+            '<div class="note warning">本次抓取异常：' + escape("、".join(errors)) + "</div>"
+        )
+
+    return f"""<!doctype html>
+<html lang=\"zh-CN\">
+<head>
+  <meta charset=\"utf-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+  <title>微电子论文晨报</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: #0b1020; color: #eaf0ff; }}
+    h1 {{ margin: 0 0 8px; font-size: 28px; }}
+    .sub {{ color: #a9b6d3; margin-bottom: 18px; }}
+    .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: #18203a; }}
+    .warning {{ background: #3a2318; color: #ffd4b5; }}
+    table {{ width: 100%; border-collapse: collapse; background: #121933; border-radius: 14px; overflow: hidden; }}
+    th, td {{ border: 1px solid #243054; padding: 10px 12px; vertical-align: top; text-align: left; }}
+    th {{ background: #18203a; position: sticky; top: 0; }}
+    tr:nth-child(even) td {{ background: #0f1730; }}
+    a {{ color: #8bc4ff; text-decoration: none; }}
+    a:hover {{ text-decoration: underline; }}
+    .abstract, .overview {{ white-space: pre-wrap; min-width: 280px; }}
+    .meta {{ display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 18px; color: #b6c2de; }}
+    .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #22305a; color: #dce6ff; font-size: 12px; margin-right: 6px; }}
+  </style>
+</head>
+<body>
+  <h1>微电子 / 集成电路论文晨报</h1>
+  <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
+  <div class=\"meta\">
+    <div><span class=\"badge\">来源</span>arXiv / Science Advances / Nature Electronics / Nature Materials</div>
+    <div><span class=\"badge\">策略</span>先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
+  </div>
+  {error_html}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>来源</th>
+        <th>日期</th>
+        <th>标题 / 链接</th>
+        <th>作者</th>
+        <th>关键词</th>
+        <th>Abstract 原文</th>
+        <th>正文概述</th>
+      </tr>
+    </thead>
+    <tbody>
+      {''.join(rows)}
+    </tbody>
+  </table>
+</body>
+</html>
+"""
+
+
 def score_paper(paper: Paper) -> Paper | None:
     title_text = paper.title
     body_text = f"{paper.summary} {' '.join(paper.authors)}"
@@ -550,6 +658,8 @@ def build_message(items: list[Paper], errors: list[str], run_dt: datetime) -> st
 def main() -> int:
     args = parse_args()
     state_path = Path(args.state_file)
+    html_path = Path(args.html_file)
+    json_path = Path(args.json_file)
     state = load_state(state_path)
     seen_ids: dict[str, int] = {k: int(v) for k, v in state.get("seen_ids", {}).items() if isinstance(v, (int, float, str))}
     now_ts = int(time.time())
@@ -580,6 +690,8 @@ def main() -> int:
     selected = unseen[: args.max_items]
 
     run_dt = datetime.now(UTC)
+    for paper in selected:
+        paper.overview_cn = build_overview_cn(paper)
     message = build_message(selected, errors, run_dt)
 
     for paper in unseen:
@@ -594,19 +706,24 @@ def main() -> int:
         },
     )
 
-    print(
-        json.dumps(
-            {
-                "ok": True,
-                "new_count": len(unseen),
-                "selected_count": len(selected),
-                "message": message,
-                "papers": [asdict(paper) for paper in selected],
-                "errors": errors,
-            },
-            ensure_ascii=False,
-        )
-    )
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+
+    payload = {
+        "ok": True,
+        "new_count": len(unseen),
+        "selected_count": len(selected),
+        "message": message,
+        "papers": [asdict(paper) for paper in selected],
+        "errors": errors,
+        "report_url": args.web_url,
+        "generated_at": run_dt.isoformat(),
+    }
+
+    html_path.write_text(render_html(selected, errors, run_dt), encoding="utf-8")
+    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    print(json.dumps(payload, ensure_ascii=False))
     return 0
 
 
