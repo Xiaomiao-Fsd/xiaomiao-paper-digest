@@ -151,8 +151,13 @@
       if (!btn) return;
       const stored = getStoredTheme();
       const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      btn.textContent = stored ? `主题：${current === 'dark' ? '深色' : '浅色'}` : 'Follow system';
-      btn.title = stored ? '点击切换深浅色；长按或双击可恢复Follow system' : '当前为Follow system，点击切换为手动主题';
+      btn.dataset.theme = current;
+      btn.dataset.mode = stored ? 'manual' : 'system';
+      const modeLabel = stored ? `Manual ${current} mode` : `Following system (${current})`;
+      btn.setAttribute('aria-label', `Theme toggle. ${modeLabel}. Click to switch. Double-click quickly or right-click to follow the system setting.`);
+      btn.title = stored
+        ? 'Manual theme mode. Click to switch between light and dark. Double-click quickly or right-click to follow the system setting.'
+        : 'Currently following the system theme. Click to switch manually.';
     }
     function setThemePreference(next) {
       if (next === null) {
@@ -246,8 +251,17 @@
       const toggle = document.getElementById('theme-toggle');
       if (toggle) {
         updateThemeToggle();
-        toggle.addEventListener('click', cycleThemePreference);
-        toggle.addEventListener('dblclick', event => { if (event.detail >= 2) setThemePreference(null); });
+        let lastToggleClickAt = 0;
+        toggle.addEventListener('click', () => {
+          const now = Date.now();
+          if (now - lastToggleClickAt < 220) {
+            lastToggleClickAt = 0;
+            setThemePreference(null);
+            return;
+          }
+          lastToggleClickAt = now;
+          cycleThemePreference();
+        });
         toggle.addEventListener('contextmenu', event => {
           event.preventDefault();
           setThemePreference(null);
