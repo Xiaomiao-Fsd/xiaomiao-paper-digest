@@ -4,40 +4,93 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>微电子论文晨报｜PC版</title>
+  <script>
+    (function () {
+      var THEME_KEY = 'paper_digest_theme_v1';
+      var storedTheme = null;
+      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <style>
-    :root { color-scheme: dark; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: #0b1020; color: #eaf0ff; }
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --text: #142033;
+      --sub: #5f6f87;
+      --nav-bg: #dbe7fb;
+      --nav-text: #17356f;
+      --note: #e9f0fb;
+      --warning-bg: #fff1e6;
+      --warning-text: #8a4a16;
+      --panel: #ffffff;
+      --panel-alt: #f8fbff;
+      --border: #d6e0f0;
+      --link: #1d63d6;
+      --btn-bg: #dbe7fb;
+      --btn-text: #17356f;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #ffffff;
+      --shadow-border: #d6e0f0;
+      --kw-bg: #e5edfb;
+    }
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --text: #eaf0ff;
+      --sub: #a9b6d3;
+      --nav-bg: #1e2a50;
+      --nav-text: #dce6ff;
+      --note: #18203a;
+      --warning-bg: #3a2318;
+      --warning-text: #ffd4b5;
+      --panel: #121933;
+      --panel-alt: #0f1730;
+      --border: #243054;
+      --link: #8bc4ff;
+      --btn-bg: #22305a;
+      --btn-text: #eef3ff;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #eef3ff;
+      --shadow-border: #243054;
+      --kw-bg: #22305a;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: var(--bg); color: var(--text); }
     h1 { margin: 0 0 8px; font-size: 28px; }
     h2 { margin: 0 0 12px; font-size: 22px; }
-    .sub { color: #a9b6d3; margin-bottom: 18px; }
+    .sub { color: var(--sub); margin-bottom: 18px; }
     .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
-    .nav a { color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-left: 8px; }
-    .note { padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: #18203a; }
-    .warning { background: #3a2318; color: #ffd4b5; }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .nav a, .theme-toggle { color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
+    .note { padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--note); }
+    .warning { background: var(--warning-bg); color: var(--warning-text); }
     .section { margin: 0 0 20px; }
-    .favorites { background: #121933; border: 1px solid #243054; border-radius: 18px; padding: 18px; margin-bottom: 20px; }
-    .favorites-sub { color: #9eb0d6; margin: 0 0 14px; }
+    .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
+    .favorites-sub { color: var(--sub); margin: 0 0 14px; }
     .favorites-list { display: grid; gap: 14px; }
-    .fav-card { border: 1px solid #243054; border-radius: 14px; padding: 14px; background: #0f1730; }
+    .fav-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--panel-alt); }
     .fav-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 8px; }
-    .fav-title a { color: #eef3ff; font-size: 18px; text-decoration: none; }
-    .fav-meta, .fav-authors { color: #a9b6d3; font-size: 13px; }
+    .fav-title a { color: var(--text); font-size: 18px; text-decoration: none; }
+    .fav-meta, .fav-authors { color: var(--sub); font-size: 13px; }
     .fav-section { margin-top: 10px; }
     .fav-section p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.65; }
-    .remove-fav, .fav-btn { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: #22305a; color: #eef3ff; }
-    .fav-btn.active { background: #6c4ad3; }
-    .empty-fav { color: #9eb0d6; }
-    .table-wrap { overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px #243054 inset; }
-    table { width: 100%; min-width: 2000px; border-collapse: collapse; background: #121933; }
-    th, td { border: 1px solid #243054; padding: 12px; vertical-align: top; text-align: left; }
-    th { background: #18203a; position: sticky; top: 0; z-index: 1; }
-    tr:nth-child(even) td { background: #0f1730; }
-    a { color: #8bc4ff; text-decoration: none; }
+    .remove-fav, .fav-btn { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--btn-bg); color: var(--btn-text); }
+    .fav-btn.active { background: var(--btn-active); color: var(--btn-active-text); }
+    .empty-fav { color: var(--sub); }
+    .table-wrap { overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--shadow-border) inset; }
+    table { width: 100%; min-width: 2000px; border-collapse: collapse; background: var(--panel); }
+    th, td { border: 1px solid var(--border); padding: 12px; vertical-align: top; text-align: left; }
+    th { background: var(--note); position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) td { background: var(--panel-alt); }
+    a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
     .abstract { min-width: 360px; white-space: pre-wrap; line-height: 1.55; }
     .abstract-cn, .overview { min-width: 300px; white-space: pre-wrap; line-height: 1.6; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; }
-    .muted { color: #a9b6d3; }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--kw-bg); margin: 0 6px 6px 0; }
+    .muted { color: var(--sub); }
   </style>
 </head>
 <body>
@@ -46,7 +99,7 @@
       <h1>微电子 / 集成电路论文晨报 · PC版</h1>
       <div class="sub">更新时间：2026-04-05 22:32（Asia/Shanghai）</div>
     </div>
-    <div class="nav"><a href="mobile.html">切到手机版</a></div>
+    <div class="topbar-actions"><div class="nav"><a href="mobile.html">切到手机版</a></div><button id="theme-toggle" class="theme-toggle" type="button">跟随系统</button></div>
   </div>
   <section class="favorites section">
     <h2>收藏夹</h2>
@@ -80,6 +133,44 @@
 
   <script>
     const FAVORITES_KEY = 'paper_digest_favorites_v1';
+    const THEME_KEY = 'paper_digest_theme_v1';
+    const themeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function getStoredTheme() {
+      try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+    }
+    function getPreferredTheme() {
+      const stored = getStoredTheme();
+      if (stored === 'light' || stored === 'dark') return stored;
+      return themeQuery && themeQuery.matches ? 'dark' : 'light';
+    }
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    }
+    function updateThemeToggle() {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      const stored = getStoredTheme();
+      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      btn.textContent = stored ? `主题：${current === 'dark' ? '深色' : '浅色'}` : '跟随系统';
+      btn.title = stored ? '点击切换深浅色；长按或双击可恢复跟随系统' : '当前为跟随系统，点击切换为手动主题';
+    }
+    function setThemePreference(next) {
+      if (next === null) {
+        try { localStorage.removeItem(THEME_KEY); } catch {}
+        applyTheme(getPreferredTheme());
+      } else {
+        try { localStorage.setItem(THEME_KEY, next); } catch {}
+        applyTheme(next);
+      }
+      updateThemeToggle();
+    }
+    function cycleThemePreference() {
+      const stored = getStoredTheme();
+      const current = stored || getPreferredTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      setThemePreference(next);
+    }
     function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
     }
@@ -156,6 +247,25 @@
       syncButtons();
     }
     document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(getPreferredTheme());
+      const toggle = document.getElementById('theme-toggle');
+      if (toggle) {
+        updateThemeToggle();
+        toggle.addEventListener('click', cycleThemePreference);
+        toggle.addEventListener('dblclick', () => setThemePreference(null));
+        toggle.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          setThemePreference(null);
+        });
+      }
+      if (themeQuery && typeof themeQuery.addEventListener === 'function') {
+        themeQuery.addEventListener('change', () => {
+          if (!getStoredTheme()) {
+            applyTheme(getPreferredTheme());
+            updateThemeToggle();
+          }
+        });
+      }
       renderFavorites();
       bindTableButtons();
     });

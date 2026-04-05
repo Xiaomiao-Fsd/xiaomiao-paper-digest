@@ -6,14 +6,37 @@
   <title>微电子论文晨报</title>
   <script>
     (function () {
+      var THEME_KEY = 'paper_digest_theme_v1';
+      var storedTheme = null;
+      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
       var mobile = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
       window.location.replace(mobile ? "mobile.html" : "desktop.html");
     })();
   </script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    .box { background: #121933; border: 1px solid #243054; border-radius: 18px; padding: 24px; width: min(92vw, 520px); }
-    a { color: #8bc4ff; }
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --text: #142033;
+      --card: #ffffff;
+      --border: #d6e0f0;
+      --link: #1d63d6;
+    }
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --text: #eef3ff;
+      --card: #121933;
+      --border: #243054;
+      --link: #8bc4ff;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: grid; place-items: center; min-height: 100vh; margin: 0; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; width: min(92vw, 520px); }
+    a { color: var(--link); }
   </style>
 </head>
 <body>

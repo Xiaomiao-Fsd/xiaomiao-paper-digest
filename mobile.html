@@ -4,37 +4,88 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>微电子论文晨报｜手机版</title>
+  <script>
+    (function () {
+      var THEME_KEY = 'paper_digest_theme_v1';
+      var storedTheme = null;
+      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <style>
-    :root { color-scheme: dark; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; }
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --text: #142033;
+      --sub: #5f6f87;
+      --nav-bg: #dbe7fb;
+      --nav-text: #17356f;
+      --panel: #ffffff;
+      --border: #d6e0f0;
+      --panel-shadow: 0 8px 24px rgba(17, 43, 88, .08);
+      --link: #1d63d6;
+      --heading-accent: #1d63d6;
+      --kw-bg: #e5edfb;
+      --btn-bg: #dbe7fb;
+      --btn-text: #17356f;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #ffffff;
+      --warning-bg: #fff1e6;
+      --warning-text: #8a4a16;
+    }
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --text: #eef3ff;
+      --sub: #a9b6d3;
+      --nav-bg: #1e2a50;
+      --nav-text: #dce6ff;
+      --panel: #121933;
+      --border: #243054;
+      --panel-shadow: 0 8px 24px rgba(0,0,0,.18);
+      --link: #8bc4ff;
+      --heading-accent: #8bc4ff;
+      --kw-bg: #22305a;
+      --btn-bg: #22305a;
+      --btn-text: #eef3ff;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #eef3ff;
+      --warning-bg: #3a2318;
+      --warning-text: #ffd4b5;
+    }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     .shell { padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }
     h1 { font-size: 24px; margin: 0 0 6px; }
     h2 { font-size: 20px; margin: 0 0 10px; }
-    .sub { color: #a9b6d3; margin-bottom: 12px; font-size: 14px; }
-    .nav a { display: inline-block; color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-bottom: 14px; }
-    .note { background: #121933; border: 1px solid #243054; border-radius: 14px; padding: 12px; margin-bottom: 12px; }
-    .warning { background: #3a2318; color: #ffd4b5; }
-    .favorites { background: #121933; border: 1px solid #243054; border-radius: 16px; padding: 14px; margin-bottom: 14px; }
-    .favorites-sub { color: #a9b6d3; font-size: 13px; margin: 0 0 10px; }
-    .fav-card, .card { background: #121933; border: 1px solid #243054; border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
-    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }
-    .index { font-weight: 700; color: #7cc2ff; }
-    h2 a, .fav-title a { color: #eef3ff; text-decoration: none; }
+    .sub { color: var(--sub); margin-bottom: 12px; font-size: 14px; }
+    .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .nav a, .theme-toggle { display: inline-block; color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
+    .note { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+    .warning { background: var(--warning-bg); color: var(--warning-text); }
+    .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+    .favorites-sub { color: var(--sub); font-size: 13px; margin: 0 0 10px; }
+    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: var(--panel-shadow); }
+    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--sub); font-size: 13px; margin-bottom: 10px; }
+    .index { font-weight: 700; color: var(--link); }
+    h2 a, .fav-title a { color: var(--text); text-decoration: none; }
     h2 { line-height: 1.45; margin: 0 0 10px; }
-    h3 { margin: 14px 0 6px; font-size: 15px; color: #8bc4ff; }
-    p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: #e4ebff; font-size: 14px; }
-    .authors, .fav-meta { color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; font-size: 12px; }
-    .muted { color: #b7c6e6; }
-    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: #22305a; color: #eef3ff; }
-    .fav-btn.active { background: #6c4ad3; }
+    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--heading-accent); }
+    p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: var(--text); font-size: 14px; }
+    .authors, .fav-meta { color: var(--sub); font-size: 13px; margin-bottom: 10px; }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--kw-bg); margin: 0 6px 6px 0; font-size: 12px; }
+    .muted { color: var(--sub); }
+    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--btn-bg); color: var(--btn-text); }
+    .fav-btn.active { background: var(--btn-active); color: var(--btn-active-text); }
   </style>
 </head>
 <body>
   <div class="shell">
     <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
     <div class="sub">更新时间：2026-04-05 22:32（Asia/Shanghai）</div>
-    <div class="nav"><a href="desktop.html">切到PC版</a></div>
+    <div class="top-actions"><div class="nav"><a href="desktop.html">切到PC版</a></div><button id="theme-toggle" class="theme-toggle" type="button">跟随系统</button></div>
     <section class="favorites">
       <h2>收藏夹</h2>
       <p class="favorites-sub">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
@@ -46,6 +97,44 @@
 
   <script>
     const FAVORITES_KEY = 'paper_digest_favorites_v1';
+    const THEME_KEY = 'paper_digest_theme_v1';
+    const themeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function getStoredTheme() {
+      try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+    }
+    function getPreferredTheme() {
+      const stored = getStoredTheme();
+      if (stored === 'light' || stored === 'dark') return stored;
+      return themeQuery && themeQuery.matches ? 'dark' : 'light';
+    }
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    }
+    function updateThemeToggle() {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      const stored = getStoredTheme();
+      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      btn.textContent = stored ? `主题：${current === 'dark' ? '深色' : '浅色'}` : '跟随系统';
+      btn.title = stored ? '点击切换深浅色；长按或双击可恢复跟随系统' : '当前为跟随系统，点击切换为手动主题';
+    }
+    function setThemePreference(next) {
+      if (next === null) {
+        try { localStorage.removeItem(THEME_KEY); } catch {}
+        applyTheme(getPreferredTheme());
+      } else {
+        try { localStorage.setItem(THEME_KEY, next); } catch {}
+        applyTheme(next);
+      }
+      updateThemeToggle();
+    }
+    function cycleThemePreference() {
+      const stored = getStoredTheme();
+      const current = stored || getPreferredTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      setThemePreference(next);
+    }
     function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
     }
@@ -118,6 +207,25 @@
       syncButtons();
     }
     document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(getPreferredTheme());
+      const toggle = document.getElementById('theme-toggle');
+      if (toggle) {
+        updateThemeToggle();
+        toggle.addEventListener('click', cycleThemePreference);
+        toggle.addEventListener('dblclick', () => setThemePreference(null));
+        toggle.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          setThemePreference(null);
+        });
+      }
+      if (themeQuery && typeof themeQuery.addEventListener === 'function') {
+        themeQuery.addEventListener('change', () => {
+          if (!getStoredTheme()) {
+            applyTheme(getPreferredTheme());
+            updateThemeToggle();
+          }
+        });
+      }
       renderFavorites();
       bindButtons();
     });
