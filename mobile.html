@@ -146,11 +146,11 @@
         }, 750);
       }
     }
-    function updateThemeToggle() {
+    function updateThemeToggle(theme = null) {
       const btn = document.getElementById('theme-toggle');
       if (!btn) return;
       const stored = getStoredTheme();
-      const current = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      const current = theme || document.documentElement.getAttribute('data-theme') || getPreferredTheme();
       btn.dataset.theme = current;
       btn.dataset.mode = stored ? 'manual' : 'system';
       btn.style.setProperty('--toggle-x', current === 'dark' ? '44px' : '0px');
@@ -161,14 +161,22 @@
         : 'Currently following the system theme. Click to switch manually.';
     }
     function setThemePreference(next) {
+      const targetTheme = next === null ? getPreferredTheme() : next;
+      const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
       if (next === null) {
         try { localStorage.removeItem(THEME_KEY); } catch {}
-        applyTheme(getPreferredTheme(), { animate: false });
       } else {
         try { localStorage.setItem(THEME_KEY, next); } catch {}
-        applyTheme(next);
       }
-      updateThemeToggle();
+      if (targetTheme === currentTheme) {
+        applyTheme(targetTheme, { animate: false });
+        updateThemeToggle(targetTheme);
+        return;
+      }
+      updateThemeToggle(targetTheme);
+      requestAnimationFrame(() => {
+        applyTheme(targetTheme);
+      });
     }
     function cycleThemePreference() {
       const stored = getStoredTheme();
@@ -252,19 +260,25 @@
       const toggle = document.getElementById('theme-toggle');
       if (toggle) {
         updateThemeToggle();
-        let lastToggleClickAt = 0;
+        let clickTimer = null;
         toggle.addEventListener('click', () => {
-          const now = Date.now();
-          if (now - lastToggleClickAt < 220) {
-            lastToggleClickAt = 0;
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
             setThemePreference(null);
             return;
           }
-          lastToggleClickAt = now;
-          cycleThemePreference();
+          clickTimer = setTimeout(() => {
+            clickTimer = null;
+            cycleThemePreference();
+          }, 180);
         });
         toggle.addEventListener('contextmenu', event => {
           event.preventDefault();
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+          }
           setThemePreference(null);
         });
       }
