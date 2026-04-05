@@ -64,6 +64,7 @@
     .sub { color: var(--sub); margin-bottom: 18px; }
     .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
     .topbar-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .nav { margin-left: -4px; }
     .nav a { color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
     .theme-toggle { position: relative; width: 78px; height: 40px; border: 0; padding: 0; border-radius: 999px; cursor: pointer; background: transparent; font: inherit; }
     .theme-toggle-track { position: relative; width: 100%; height: 100%; border-radius: 999px; overflow: hidden; background: linear-gradient(180deg, #dfeaf8 0%, #bdd3f0 100%); box-shadow: inset 0 0 0 1px rgba(130, 153, 188, .35); transition: background .35s ease, box-shadow .35s ease; }
@@ -188,10 +189,10 @@
       const next = current === 'dark' ? 'light' : 'dark';
       setThemePreference(next);
     }
-    function loadSaved Papers() {
+    function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
     }
-    function saveSaved Papers(items) {
+    function saveFavorites(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
     }
     function escapeHtml(text) {
@@ -216,9 +217,9 @@
           <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
         </article>`;
     }
-    function renderSaved Papers() {
+    function renderFavorites() {
       const wrap = document.getElementById('favorites-list');
-      const items = loadSaved Papers();
+      const items = loadFavorites();
       if (!items.length) {
         wrap.innerHTML = '<div class="empty-fav">No saved papers yet. Use “Save” on any paper you want to keep.</div>';
         return;
@@ -228,15 +229,15 @@
         btn.addEventListener('click', () => {
           const card = btn.closest('.fav-card');
           const uid = card?.dataset?.uid;
-          const next = loadSaved Papers().filter(item => item.uid !== uid);
-          saveSaved Papers(next);
-          renderSaved Papers();
+          const next = loadFavorites().filter(item => item.uid !== uid);
+          saveFavorites(next);
+          renderFavorites();
           syncButtons();
         });
       });
     }
     function syncButtons() {
-      const favs = new Set(loadSaved Papers().map(item => item.uid));
+      const favs = new Set(loadFavorites().map(item => item.uid));
       document.querySelectorAll('tr[data-paper]').forEach(tr => {
         const btn = tr.querySelector('.fav-btn');
         if (!btn) return;
@@ -253,11 +254,11 @@
         btn.dataset.bound = '1';
         btn.addEventListener('click', () => {
           const paper = JSON.parse(tr.dataset.paper);
-          const items = loadSaved Papers();
+          const items = loadFavorites();
           const exists = items.some(item => item.uid === paper.uid);
           const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
-          saveSaved Papers(next);
-          renderSaved Papers();
+          saveFavorites(next);
+          renderFavorites();
           syncButtons();
         });
       });
@@ -283,7 +284,7 @@
           }
         });
       }
-      renderSaved Papers();
+      renderFavorites();
       bindTableButtons();
     });
   </script>
