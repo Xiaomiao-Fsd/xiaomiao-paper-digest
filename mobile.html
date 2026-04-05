@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Microelectronics Paper Digest｜Mobile</title>
+  <title>Morning Paper Digest for Microelectronics｜Mobile</title>
   <script>
     (function () {
       var THEME_KEY = 'paper_digest_theme_v1';
@@ -83,16 +83,16 @@
 </head>
 <body>
   <div class="shell">
-    <h1>Microelectronics / IC Paper Digest · Mobile</h1>
+    <h1>Morning Paper Digest for Microelectronics / IC · Mobile</h1>
     <div class="sub">Updated: 2026-04-05 22:32（Asia/Shanghai）</div>
     <div class="top-actions"><div class="nav"><a href="desktop.html">切到Desktop</a></div><button id="theme-toggle" class="theme-toggle" type="button">Follow system</button></div>
     <section class="favorites">
-      <h2>Favorites</h2>
-      <p class="favorites-sub">Saved papers stay in this browser on this device, so you can come back to them later.</p>
+      <h2>Saved Papers</h2>
+      <p class="favorites-sub">Saved papers stay in this browser on this device, so you can revisit them later.</p>
       <div id="favorites-list"></div>
     </section>
     
-    <article class="card"><p>No new matching papers for today yet.</p></article>
+    <article class="card"><p>No matching new papers have been identified for today yet.</p></article>
   </div>
 
   <script>
@@ -135,10 +135,10 @@
       const next = current === 'dark' ? 'light' : 'dark';
       setThemePreference(next);
     }
-    function loadFavorites() {
+    function loadSaved Papers() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
     }
-    function saveFavorites(items) {
+    function saveSaved Papers(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
     }
     function escapeHtml(text) {
@@ -160,26 +160,26 @@
         <div class="keywords">${kws}</div>
       </article>`;
     }
-    function renderFavorites() {
+    function renderSaved Papers() {
       const wrap = document.getElementById('favorites-list');
-      const items = loadFavorites();
+      const items = loadSaved Papers();
       if (!items.length) {
-        wrap.innerHTML = '<article class="fav-card"><p>No saved papers yet. Tap “Save” on any paper you want to keep.</p></article>';
+        wrap.innerHTML = '<article class="fav-card"><p>No saved papers yet. Use “Save” on any paper you want to keep.</p></article>';
         return;
       }
       wrap.innerHTML = items.map(favCardHtml).join('');
       wrap.querySelectorAll('.remove-fav').forEach(btn => {
         btn.addEventListener('click', () => {
           const uid = btn.closest('.fav-card')?.dataset?.uid;
-          const next = loadFavorites().filter(item => item.uid !== uid);
-          saveFavorites(next);
-          renderFavorites();
+          const next = loadSaved Papers().filter(item => item.uid !== uid);
+          saveSaved Papers(next);
+          renderSaved Papers();
           syncButtons();
         });
       });
     }
     function syncButtons() {
-      const ids = new Set(loadFavorites().map(item => item.uid));
+      const ids = new Set(loadSaved Papers().map(item => item.uid));
       document.querySelectorAll('.card[data-paper]').forEach(card => {
         const btn = card.querySelector('.fav-btn');
         if (!btn) return;
@@ -196,11 +196,11 @@
         btn.dataset.bound = '1';
         btn.addEventListener('click', () => {
           const paper = JSON.parse(card.dataset.paper);
-          const items = loadFavorites();
+          const items = loadSaved Papers();
           const exists = items.some(item => item.uid === paper.uid);
           const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
-          saveFavorites(next);
-          renderFavorites();
+          saveSaved Papers(next);
+          renderSaved Papers();
           syncButtons();
         });
       });
@@ -226,7 +226,7 @@
           }
         });
       }
-      renderFavorites();
+      renderSaved Papers();
       bindButtons();
     });
   </script>

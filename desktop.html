@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Microelectronics Paper Digest｜Desktop</title>
+  <title>Morning Paper Digest for Microelectronics｜Desktop</title>
   <script>
     (function () {
       var THEME_KEY = 'paper_digest_theme_v1';
@@ -96,14 +96,14 @@
 <body>
   <div class="topbar">
     <div>
-      <h1>Microelectronics / IC Paper Digest · Desktop</h1>
+      <h1>Morning Paper Digest for Microelectronics / IC · Desktop</h1>
       <div class="sub">Updated: 2026-04-05 22:32（Asia/Shanghai）</div>
     </div>
     <div class="topbar-actions"><div class="nav"><a href="mobile.html">切到Mobile</a></div><button id="theme-toggle" class="theme-toggle" type="button">Follow system</button></div>
   </div>
   <section class="favorites section">
-    <h2>Favorites</h2>
-    <p class="favorites-sub">Papers you save will stay in this browser on this device, so they will still be here next time.</p>
+    <h2>Saved Papers</h2>
+    <p class="favorites-sub">Saved papers stay in this browser on this device, so you can revisit them later.</p>
     <div id="favorites-list" class="favorites-list"></div>
   </section>
   
@@ -116,16 +116,16 @@
             <th>收藏</th>
             <th>Source</th>
             <th>Date</th>
-            <th>Title / Link</th>
+            <th>Paper Title / Link</th>
             <th>Authors</th>
             <th>Keywords</th>
-            <th>Original abstract</th>
-            <th>Chinese summary</th>
-            <th>Reading overview（基于标题/摘要）</th>
+            <th>Abstract (Original)</th>
+            <th>Chinese Summary</th>
+            <th>Reading Notes（基于标题/摘要）</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td colspan="10">No new matching papers for today yet.</td></tr>
+          <tr><td colspan="10">No matching new papers have been identified for today yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -171,10 +171,10 @@
       const next = current === 'dark' ? 'light' : 'dark';
       setThemePreference(next);
     }
-    function loadFavorites() {
+    function loadSaved Papers() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
     }
-    function saveFavorites(items) {
+    function saveSaved Papers(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
     }
     function escapeHtml(text) {
@@ -194,16 +194,16 @@
           </div>
           <div class="fav-authors">Authors: ${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
-          <div class="fav-section"><strong>Original abstract</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
-          <div class="fav-section"><strong>Chinese summary</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
-          <div class="fav-section"><strong>Reading overview</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract (Original)</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
+          <div class="fav-section"><strong>Chinese Summary</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
         </article>`;
     }
-    function renderFavorites() {
+    function renderSaved Papers() {
       const wrap = document.getElementById('favorites-list');
-      const items = loadFavorites();
+      const items = loadSaved Papers();
       if (!items.length) {
-        wrap.innerHTML = '<div class="empty-fav">No saved papers yet. Tap “Save” on any paper you want to keep.</div>';
+        wrap.innerHTML = '<div class="empty-fav">No saved papers yet. Use “Save” on any paper you want to keep.</div>';
         return;
       }
       wrap.innerHTML = items.map(paperCardHtml).join('');
@@ -211,15 +211,15 @@
         btn.addEventListener('click', () => {
           const card = btn.closest('.fav-card');
           const uid = card?.dataset?.uid;
-          const next = loadFavorites().filter(item => item.uid !== uid);
-          saveFavorites(next);
-          renderFavorites();
+          const next = loadSaved Papers().filter(item => item.uid !== uid);
+          saveSaved Papers(next);
+          renderSaved Papers();
           syncButtons();
         });
       });
     }
     function syncButtons() {
-      const favs = new Set(loadFavorites().map(item => item.uid));
+      const favs = new Set(loadSaved Papers().map(item => item.uid));
       document.querySelectorAll('tr[data-paper]').forEach(tr => {
         const btn = tr.querySelector('.fav-btn');
         if (!btn) return;
@@ -236,11 +236,11 @@
         btn.dataset.bound = '1';
         btn.addEventListener('click', () => {
           const paper = JSON.parse(tr.dataset.paper);
-          const items = loadFavorites();
+          const items = loadSaved Papers();
           const exists = items.some(item => item.uid === paper.uid);
           const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
-          saveFavorites(next);
-          renderFavorites();
+          saveSaved Papers(next);
+          renderSaved Papers();
           syncButtons();
         });
       });
@@ -266,7 +266,7 @@
           }
         });
       }
-      renderFavorites();
+      renderSaved Papers();
       bindTableButtons();
     });
   </script>
