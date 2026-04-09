@@ -16,6 +16,10 @@
     "word-docx": {
       "version": "1.0.2",
       "installedAt": 1775710985793
+    },
+    "docx-2": {
+      "version": "0.1.0",
+      "installedAt": 1775711351969
     }
   }
 }
