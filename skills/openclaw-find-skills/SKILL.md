@@ -1,6 +1,6 @@
 ---
 name: find-skills
-description: Discover and install skills from the open agent skills ecosystem. Use when: (1) user asks "how do I do X" where X might have an existing skill, (2) user says "find a skill for X" or "is there a skill for X", (3) user asks "can you do X" where X is a specialized capability, (4) user wants to extend agent capabilities, (5) user wants to search for tools, templates, or workflows, (6) user mentions they wish they had help with a specific domain (design, testing, deployment, etc.).
+description: "Discover and install skills from the open agent skills ecosystem. Use when: (1) user asks 'how do I do X' where X might have an existing skill, (2) user says 'find a skill for X' or 'is there a skill for X', (3) user asks 'can you do X' where X is a specialized capability, (4) user wants to extend agent capabilities, (5) user wants to search for tools, templates, or workflows, (6) user mentions they wish they had help with a specific domain (design, testing, deployment, etc.)."
 ---
 
 # Find Skills
