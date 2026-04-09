@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "skills": {
+    "openclaw-tavily-search": {
+      "version": "0.1.0",
+      "installedAt": 1775710757534
+    },
+    "summarize-1-0-0": {
+      "version": "1.0.0",
+      "installedAt": 1775710806053
+    },
+    "openclaw-find-skills": {
+      "version": "1.0.0",
+      "installedAt": 1775710951382
+    },
+    "word-docx": {
+      "version": "1.0.2",
+      "installedAt": 1775710985793
+    }
+  }
+}
