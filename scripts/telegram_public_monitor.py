@@ -151,30 +151,49 @@ def fetch_page(url: str, before: Optional[int], proxy: Optional[str]) -> list[Po
     proxies = None
     if proxy:
         proxies = {"http": proxy, "https": proxy}
-    r = requests.get(page_url, headers={"User-Agent": UA}, proxies=proxies, timeout=30)
-    r.raise_for_status()
-    media_map = extract_media_urls_by_post(r.text)
-    parser = TelegramPublicPageParser()
-    parser.feed(r.text)
-    parser.close()
-    posts: list[Post] = []
-    for item in parser.items:
+
+    last_error: Optional[Exception] = None
+    for attempt in range(3):
         try:
-            pid = int(item["post"].split("/")[-1])
-        except Exception:
-            continue
-        posts.append(Post(
-            post=item["post"],
-            id=pid,
-            url=item["url"],
-            datetime=item["datetime"],
-            time_label=item["time_label"],
-            author=item["author"] or "频道",
-            text=item["text"],
-            media_urls=media_map.get(item["post"], []),
-        ))
-    posts.sort(key=lambda x: x.id)
-    return posts
+            r = requests.get(
+                page_url,
+                headers={"User-Agent": UA, "Connection": "close"},
+                proxies=proxies,
+                timeout=30,
+            )
+            r.raise_for_status()
+            media_map = extract_media_urls_by_post(r.text)
+            parser = TelegramPublicPageParser()
+            parser.feed(r.text)
+            parser.close()
+            posts: list[Post] = []
+            for item in parser.items:
+                try:
+                    pid = int(item["post"].split("/")[-1])
+                except Exception:
+                    continue
+                posts.append(Post(
+                    post=item["post"],
+                    id=pid,
+                    url=item["url"],
+                    datetime=item["datetime"],
+                    time_label=item["time_label"],
+                    author=item["author"] or "频道",
+                    text=item["text"],
+                    media_urls=media_map.get(item["post"], []),
+                ))
+            posts.sort(key=lambda x: x.id)
+            return posts
+        except Exception as e:
+            last_error = e
+            if attempt < 2:
+                time.sleep(1.0 + attempt)
+            else:
+                raise
+
+    if last_error:
+        raise last_error
+    return []
 
 
 def load_state(path: Path) -> dict:
