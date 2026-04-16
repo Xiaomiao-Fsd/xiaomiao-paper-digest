@@ -1,160 +1,217 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>微电子论文晨报｜手机版</title>
+  <link rel="icon" type="image/jpeg" href="assets/preview.jpg" />
+  <link rel="apple-touch-icon" href="assets/preview.jpg" />
+  <meta property="og:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
+  <title>Morning Paper Digest for Microelectronics｜Xiaomiao</title>
+  <script>
+    (function () {
+      var THEME_KEY = 'paper_digest_theme_v1';
+      var storedTheme = null;
+      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
+      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <style>
-    :root { color-scheme: dark; --bg:#0b1020; --panel:#121933; --panel2:#0f1730; --panel3:#18203a; --border:#243054; --text:#eef3ff; --soft:#a9b6d3; --link:#8bc4ff; --pill:#22305a; --accent:#6c4ad3; --warnbg:#3a2318; --warntext:#ffd4b5; }
-    :root[data-theme='light'] { color-scheme: light; --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8faff; --panel3:#eef3ff; --border:#d7e0f3; --text:#1f2a44; --soft:#5c6b89; --link:#295fd6; --pill:#e7eeff; --accent:#5a48d6; --warnbg:#fff2e8; --warntext:#9a4d16; }
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --text: #142033;
+      --sub: #5f6f87;
+      --nav-bg: #dbe7fb;
+      --nav-text: #17356f;
+      --panel: #ffffff;
+      --border: #d6e0f0;
+      --panel-shadow: 0 8px 24px rgba(17, 43, 88, .08);
+      --link: #1d63d6;
+      --heading-accent: #1d63d6;
+      --kw-bg: #e5edfb;
+      --btn-bg: #dbe7fb;
+      --btn-text: #17356f;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #ffffff;
+      --warning-bg: #fff1e6;
+      --warning-text: #8a4a16;
+    }
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --text: #eef3ff;
+      --sub: #a9b6d3;
+      --nav-bg: #1e2a50;
+      --nav-text: #dce6ff;
+      --panel: #121933;
+      --border: #243054;
+      --panel-shadow: 0 8px 24px rgba(0,0,0,.18);
+      --link: #8bc4ff;
+      --heading-accent: #8bc4ff;
+      --kw-bg: #22305a;
+      --btn-bg: #22305a;
+      --btn-text: #eef3ff;
+      --btn-active: #6c4ad3;
+      --btn-active-text: #eef3ff;
+      --warning-bg: #3a2318;
+      --warning-text: #ffd4b5;
+    }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     .shell { padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }
     h1 { font-size: 24px; margin: 0 0 6px; }
     h2 { font-size: 20px; margin: 0 0 10px; }
-    .sub { color: var(--soft); margin-bottom: 12px; font-size: 14px; }
-    .top-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
-    .nav a, .theme-btn { display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }
+    .sub { color: var(--sub); margin-bottom: 12px; font-size: 14px; }
+    .top-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .nav { margin-left: -2px; }
+    .nav a { display: inline-block; color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
+    .theme-toggle { --toggle-duration: .75s; --toggle-x: 0px; position: relative; display: inline-flex; align-items: center; justify-content: center; width: 84px; height: 40px; min-width: 84px; border: 0; padding: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; overflow: visible; }
+    .theme-toggle-track { position: relative; display: block; width: 84px; height: 40px; border-radius: 999px; overflow: hidden; background: linear-gradient(180deg, #dfeaf8 0%, #bdd3f0 100%); box-shadow: inset 0 0 0 1px rgba(130,153,188,.35), 0 1px 2px rgba(14,30,66,.08); transition: background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
+    .theme-toggle-track::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,0)); }
+    .theme-toggle-sky { position: absolute; border-radius: 50%; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
+    .theme-toggle-sky-day { width: 18px; height: 18px; left: 50px; top: 18px; background: rgba(255,255,255,.35); opacity: 1; }
+    .theme-toggle-sky-night { width: 14px; height: 14px; right: 16px; top: 11px; background: #eef2ff; box-shadow: -4px 0 0 1px rgba(17,24,39,.18) inset; opacity: 0; transform: translateY(2px) scale(.92); }
+    .theme-toggle-stars { position: absolute; inset: 0; opacity: 0; transition: opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
+    .theme-toggle-stars::before { content: ''; position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.82); right: 36px; top: 11px; box-shadow: -10px 8px 0 rgba(255,255,255,.55), -18px 17px 0 rgba(255,255,255,.4), 8px 14px 0 rgba(255,255,255,.45); }
+    .theme-toggle-thumb { position: absolute; top: 4px; left: 4px; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(180deg, #ffd978 0%, #f6b73c 100%); box-shadow: 0 2px 8px rgba(108,85,24,.26), inset 0 -2px 3px rgba(180,120,10,.18); transform: translate3d(var(--toggle-x), 0, 0); will-change: transform, background, box-shadow; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); z-index: 2; }
+    .theme-toggle[data-theme='dark'] .theme-toggle-track { background: linear-gradient(180deg, #1d2745 0%, #11182d 100%); box-shadow: inset 0 0 0 1px rgba(116,137,188,.2), 0 1px 2px rgba(0,0,0,.24); }
+    .theme-toggle[data-theme='dark'] .theme-toggle-thumb { background: linear-gradient(180deg, #eef2ff 0%, #c9d2ec 100%); box-shadow: 0 2px 8px rgba(5,8,16,.34), inset 0 -2px 3px rgba(120,130,160,.2); }
+    .theme-toggle[data-theme='dark'] .theme-toggle-sky-day { opacity: .18; transform: scale(.92); }
+    .theme-toggle[data-theme='dark'] .theme-toggle-sky-night { opacity: 1; transform: translateY(0) scale(1); }
+    .theme-toggle[data-theme='dark'] .theme-toggle-stars { opacity: 1; }
+    .theme-toggle:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+    .theme-animating, .theme-animating *, .theme-animating *::before, .theme-animating *::after { transition: background-color .75s cubic-bezier(.22,.61,.36,1), color .75s cubic-bezier(.22,.61,.36,1), border-color .75s cubic-bezier(.22,.61,.36,1), box-shadow .75s cubic-bezier(.22,.61,.36,1), opacity .75s cubic-bezier(.22,.61,.36,1); }
     .note { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
-    .warning { background: var(--warnbg); color: var(--warntext); }
+    .warning { background: var(--warning-bg); color: var(--warning-text); }
     .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
-    .favorites-sub { color: var(--soft); font-size: 13px; margin: 0 0 10px; }
-    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
-    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--soft); font-size: 13px; margin-bottom: 10px; }
+    .favorites-sub { color: var(--sub); font-size: 13px; margin: 0 0 10px; }
+    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: var(--panel-shadow); }
+    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--sub); font-size: 13px; margin-bottom: 10px; }
     .index { font-weight: 700; color: var(--link); }
     h2 a, .fav-title a { color: var(--text); text-decoration: none; }
     h2 { line-height: 1.45; margin: 0 0 10px; }
-    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--link); }
+    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--heading-accent); }
     p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: var(--text); font-size: 14px; }
-    .authors, .fav-meta { color: var(--soft); font-size: 13px; margin-bottom: 10px; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; font-size: 12px; }
-    .muted { color: var(--soft); }
-    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }
-    .fav-btn.active { background: var(--accent); color:#fff; }
+    .authors, .fav-meta { color: var(--sub); font-size: 13px; margin-bottom: 10px; }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--kw-bg); margin: 0 6px 6px 0; font-size: 12px; }
+    .muted { color: var(--sub); }
+    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--btn-bg); color: var(--btn-text); }
+    .fav-btn.active { background: var(--btn-active); color: var(--btn-active-text); }
   </style>
 </head>
 <body>
   <div class="shell">
-    <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
-    <div class="sub">更新时间：2026-04-16 13:53（Asia/Shanghai）</div>
-    <div class="nav"><a href="/paper_digest/desktop.html">切到PC版</a></div>
+    <h1>Morning Paper Digest for Microelectronics / IC · Mobile</h1>
+    <div class="sub">Updated: 2026-04-05 22:32 (Asia/Shanghai) · Coverage: last 7 days</div>
+    <div class="top-actions">
+      <div class="nav"><a href="desktop.html">Desktop view</a></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light and dark theme. Double-click quickly or right-click to follow the system setting.">
+        <span class="theme-toggle-track" aria-hidden="true">
+          <span class="theme-toggle-sky theme-toggle-sky-day"></span>
+          <span class="theme-toggle-sky theme-toggle-sky-night"></span>
+          <span class="theme-toggle-stars"></span>
+          <span class="theme-toggle-thumb"></span>
+        </span>
+      </button>
+    </div>
     <section class="favorites">
-      <h2>收藏夹</h2>
-      <p class="favorites-sub">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
+      <h2>Saved Papers</h2>
+      <p class="favorites-sub">Saved papers stay in this browser on this device, so you can revisit them later.</p>
       <div id="favorites-list"></div>
     </section>
     
-    <article class="card" data-paper='{&quot;uid&quot;: &quot;arxiv:2604.12366v1&quot;, &quot;source&quot;: &quot;arXiv&quot;, &quot;published&quot;: &quot;2026-04-14&quot;, &quot;title&quot;: &quot;A CMOS-compatible, scalable and compact magnetoelectric spin-torque microwave detector&quot;, &quot;url&quot;: &quot;https://arxiv.org/abs/2604.12366v1&quot;, &quot;authors&quot;: [&quot;Shuhui Liu&quot;, &quot;Riccardo Tomasello&quot;, &quot;Bin Fang&quot;, &quot;Aitian Chen&quot;, &quot;Like Zhang&quot;, &quot;Zhenhao Liu&quot;, &quot;Rui Hu&quot;, &quot;Wenkui Lin&quot;, &quot;Mario Carpentieri&quot;, &quot;Baoshun Zhang&quot;, &quot;Xixiang Zhang&quot;, &quot;Giovanni Finocchio&quot;, &quot;Zhongming Zeng&quot;], &quot;highlights&quot;: [&quot;CMOS&quot;], &quot;summary&quot;: &quot;The development of compact and highly sensitive microwave detectors compatible with complementary-metal-oxide-semiconductor (CMOS) processes is an active research area but remains a major challenge in microwave technology. Spin-torque diodes (STDs) are emerging nanoscale spintronic devices capable of surpassing the theoretical thermodynamic sensitivity limits of Schottky diodes. However, their practical use in compact systems is limited by the need of external antennas or probes. Here, we demonstrate a magnetoelectric (ME) spin-torque microwave detector that monolithically integrates an ME antenna with a magnetic tunnel junction (MTJ). The device directly converts wireless electromagnetic signals into a DC output at sub-microwatt power levels, achieving a sensitivity greater than 90 kV/W, a noise equivalent power of 3 pW*Hz^-0.5, and a compact footprint of 0.4 mm^2. This performance is due to the nonlinear coupling between incoherent magnetization dynamics, driven by a DC current in the MTJ, and the combined effects of the microwave voltage and strain generated by the ME antenna under incident electromagnetic waves. We further show that this design is scalable, enabling the co-integration of an ME antenna with an array of MTJs. A detector incorporating four MTJs, for example, exhibits a sensitivity exceeding 400 kV/W. This work paves the way for a new generation of highly sensitive, compact and scalable microwave detectors that combine ME antennas and spintronic diodes.&quot;, &quot;abstract_cn&quot;: &quot;这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是CMOS；摘要里最值得先关注的是性能提升、效率/耦合表现、先进尺度下的可扩展性。&quot;, &quot;overview_cn&quot;: &quot;如果按正文展开来看，这篇文章大概率会先说明CMOS的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件，最后用性能提升、效率/耦合表现、先进尺度下的可扩展性来支撑其结论与应用价值。&quot;}' data-uid="arxiv:2604.12366v1">
-              <div class="card-head">
-                <div>
-                  <div class="index">#1</div>
-                  <div class="meta-line">arXiv · 2026-04-14</div>
-                </div>
-                <button class="fav-btn" type="button">☆ 收藏</button>
-              </div>
-              <h2><a href="https://arxiv.org/abs/2604.12366v1" target="_blank" rel="noopener noreferrer">A CMOS-compatible, scalable and compact magnetoelectric spin-torque microwave detector</a></h2>
-              <div class="authors">作者：Shuhui Liu, Riccardo Tomasello, Bin Fang, Aitian Chen, Like Zhang, Zhenhao Liu, Rui Hu, Wenkui Lin, Mario Carpentieri, Baoshun Zhang, Xixiang Zhang, Giovanni Finocchio, Zhongming Zeng</div>
-              <div class="keywords"><span class="kw">CMOS</span></div>
-              <section>
-                <h3>Abstract 原文</h3>
-                <p>The development of compact and highly sensitive microwave detectors compatible with complementary-metal-oxide-semiconductor (CMOS) processes is an active research area but remains a major challenge in microwave technology. Spin-torque diodes (STDs) are emerging nanoscale spintronic devices capable of surpassing the theoretical thermodynamic sensitivity limits of Schottky diodes. However, their practical use in compact systems is limited by the need of external antennas or probes. Here, we demonstrate a magnetoelectric (ME) spin-torque microwave detector that monolithically integrates an ME antenna with a magnetic tunnel junction (MTJ). The device directly converts wireless electromagnetic signals into a DC output at sub-microwatt power levels, achieving a sensitivity greater than 90 kV/W, a noise equivalent power of 3 pW*Hz^-0.5, and a compact footprint of 0.4 mm^2. This performance is due to the nonlinear coupling between incoherent magnetization dynamics, driven by a DC current in the MTJ, and the combined effects of the microwave voltage and strain generated by the ME antenna under incident electromagnetic waves. We further show that this design is scalable, enabling the co-integration of an ME antenna with an array of MTJs. A detector incorporating four MTJs, for example, exhibits a sensitivity exceeding 400 kV/W. This work paves the way for a new generation of highly sensitive, compact and scalable microwave detectors that combine ME antennas and spintronic diodes.</p>
-              </section>
-              <section>
-                <h3>中文摘要概括</h3>
-                <p>这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是CMOS；摘要里最值得先关注的是性能提升、效率/耦合表现、先进尺度下的可扩展性。</p>
-              </section>
-              <section>
-                <h3>正文概括（基于标题/摘要）</h3>
-                <p>如果按正文展开来看，这篇文章大概率会先说明CMOS的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件，最后用性能提升、效率/耦合表现、先进尺度下的可扩展性来支撑其结论与应用价值。</p>
-              </section>
-            </article><article class="card" data-paper='{&quot;uid&quot;: &quot;arxiv:2604.13445v1&quot;, &quot;source&quot;: &quot;arXiv&quot;, &quot;published&quot;: &quot;2026-04-15&quot;, &quot;title&quot;: &quot;Sub-nm range momentum-dependent exciton transfer from a 2D semiconductor to graphene&quot;, &quot;url&quot;: &quot;https://arxiv.org/abs/2604.13445v1&quot;, &quot;authors&quot;: [&quot;Aditi Raman Moghe&quot;, &quot;Delphine Lagarde&quot;, &quot;Sotirios Papadopoulos&quot;, &quot;Etienne Lorchat&quot;, &quot;Luis E. Parra López&quot;, &quot;Loïc Moczko&quot;, &quot;Kenji Watanabe&quot;, &quot;Takashi Taniguchi&quot;, &quot;Michelangelo Romeo&quot;, &quot;Maxime Mauguet&quot;, &quot;Xavier Marie&quot;, &quot;Arnaud Gloppe&quot;, &quot;Cédric Robert&quot;, &quot;Stéphane Berciaud&quot;], &quot;highlights&quot;: [&quot;semiconductor&quot;], &quot;summary&quot;: &quot;Van der Waals heterostructures made from atomically thin transition metal dichalcogenides (TMD) and graphene have emerged as a building block for optoelectronic devices. Such systems are also uniquely poised to investigate interfacial coupling as well as photoinduced charge and energy transfer in the 2D limit. Recent works have revealed efficient photoluminescence quenching and picosecond transfer in TMD/graphene heterostructures. However, key questions regarding the transfer mechanisms remain. Here, employing time-resolved photoluminescence spectroscopy with 1~ps resolution in MoSe$_2$ monolayer directly coupled to a few-layer ``staircase-like&#x27;&#x27; graphene flake, we consistently observe an exciton transfer time of $\\approx 2.5~\\mathrm{ps}$ at cryogenic temperature that is marginally affected by the number of graphene layers. Remarkably, exciton transfer vanishes in samples consisting in an MoSe$_2$ monolayer separated from graphene by a thin dielectric spacer of hexagonal boron nitride, as soon as the spacer thickness reaches 1~nm. These results suggest that charge tunnelling processes govern exciton dynamics. Other mechanisms mediated the dipolar interactions (Förster-type energy transfer) have no measurable impact on bright excitons (with near-zero center of mass momentum) but may accelerate the relaxation of finite momentum ``hot&#x27;&#x27; excitons, leading to larger photoluminescence quenching than anticipated based on the measurements of the photoluminescence decay rates. Our work provides important insights into charge and energy transfer in van der Waals materials with direct implications for energy harvesting and funneling.&quot;, &quot;abstract_cn&quot;: &quot;这段摘要主要在说：作者展示器件/材料方案的关键结果，研究对象是半导体；摘要里最值得先关注的是效率/耦合表现、先进尺度下的可扩展性、功耗或能效表现。&quot;, &quot;overview_cn&quot;: &quot;如果按正文展开来看，这篇文章大概率会先说明半导体的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件、电学/光学表征与测试结果、机理分析或模型解释，最后用效率/耦合表现、先进尺度下的可扩展性、功耗或能效表现来支撑其结论与应用价值。&quot;}' data-uid="arxiv:2604.13445v1">
-              <div class="card-head">
-                <div>
-                  <div class="index">#2</div>
-                  <div class="meta-line">arXiv · 2026-04-15</div>
-                </div>
-                <button class="fav-btn" type="button">☆ 收藏</button>
-              </div>
-              <h2><a href="https://arxiv.org/abs/2604.13445v1" target="_blank" rel="noopener noreferrer">Sub-nm range momentum-dependent exciton transfer from a 2D semiconductor to graphene</a></h2>
-              <div class="authors">作者：Aditi Raman Moghe, Delphine Lagarde, Sotirios Papadopoulos, Etienne Lorchat, Luis E. Parra López, Loïc Moczko, Kenji Watanabe, Takashi Taniguchi, Michelangelo Romeo, Maxime Mauguet, Xavier Marie, Arnaud Gloppe, Cédric Robert, Stéphane Berciaud</div>
-              <div class="keywords"><span class="kw">semiconductor</span></div>
-              <section>
-                <h3>Abstract 原文</h3>
-                <p>Van der Waals heterostructures made from atomically thin transition metal dichalcogenides (TMD) and graphene have emerged as a building block for optoelectronic devices. Such systems are also uniquely poised to investigate interfacial coupling as well as photoinduced charge and energy transfer in the 2D limit. Recent works have revealed efficient photoluminescence quenching and picosecond transfer in TMD/graphene heterostructures. However, key questions regarding the transfer mechanisms remain. Here, employing time-resolved photoluminescence spectroscopy with 1~ps resolution in MoSe$_2$ monolayer directly coupled to a few-layer ``staircase-like&#x27;&#x27; graphene flake, we consistently observe an exciton transfer time of $\approx 2.5~\mathrm{ps}$ at cryogenic temperature that is marginally affected by the number of graphene layers. Remarkably, exciton transfer vanishes in samples consisting in an MoSe$_2$ monolayer separated from graphene by a thin dielectric spacer of hexagonal boron nitride, as soon as the spacer thickness reaches 1~nm. These results suggest that charge tunnelling processes govern exciton dynamics. Other mechanisms mediated the dipolar interactions (Förster-type energy transfer) have no measurable impact on bright excitons (with near-zero center of mass momentum) but may accelerate the relaxation of finite momentum ``hot&#x27;&#x27; excitons, leading to larger photoluminescence quenching than anticipated based on the measurements of the photoluminescence decay rates. Our work provides important insights into charge and energy transfer in van der Waals materials with direct implications for energy harvesting and funneling.</p>
-              </section>
-              <section>
-                <h3>中文摘要概括</h3>
-                <p>这段摘要主要在说：作者展示器件/材料方案的关键结果，研究对象是半导体；摘要里最值得先关注的是效率/耦合表现、先进尺度下的可扩展性、功耗或能效表现。</p>
-              </section>
-              <section>
-                <h3>正文概括（基于标题/摘要）</h3>
-                <p>如果按正文展开来看，这篇文章大概率会先说明半导体的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件、电学/光学表征与测试结果、机理分析或模型解释，最后用效率/耦合表现、先进尺度下的可扩展性、功耗或能效表现来支撑其结论与应用价值。</p>
-              </section>
-            </article><article class="card" data-paper='{&quot;uid&quot;: &quot;arxiv:2604.12539v1&quot;, &quot;source&quot;: &quot;arXiv&quot;, &quot;published&quot;: &quot;2026-04-14&quot;, &quot;title&quot;: &quot;Thermal Characterization of Buried Interfaces in Multilayer Heterostructures via TDTR with Periodic Waveform Analysis&quot;, &quot;url&quot;: &quot;https://arxiv.org/abs/2604.12539v1&quot;, &quot;authors&quot;: [&quot;Mingzhen Zhang&quot;, &quot;Puqing Jiang&quot;, &quot;Ronggui Yang&quot;], &quot;highlights&quot;: [], &quot;summary&quot;: &quot;Accurate evaluation of buried thermal interfaces is vital for understanding and optimizing heat dissipation in wide- and ultra-wide-bandgap (WBG/UWBG) semiconductor devices. Conventional time-domain thermoreflectance (TDTR) typically probes only near-surface transport due to its restricted modulation frequency range. Here, we employ a frequency-tunable periodic waveform analysis TDTR (PWA-TDTR) technique to perform depth-resolved thermal measurements on three representative systems: epitaxial ε-Ga2O3/SiC, GaN/Si, and mechanically bonded GaN/diamond. By combining broadband multi-frequency probing with sensitivity-guided joint fitting, we quantitively determine interfacial thermal conductance, layer-specific thermal conductivity, and volumetric heat capacity, without requiring destructive sample preparation. The results reveal that the buried Ga2O3/SiC interface exhibits weak phonon transmission due to acoustic mismatch; the transition layers in GaN/Si act as phonon-impedance gradients that redistribute heat flux; and the GaN/diamond boundary remains the dominant thermal bottleneck despite diamond&#x27;s ultrahigh bulk conductivity. These findings demonstrate that the modulation frequency in PWA-TDTR functions as a tunable probe of depth-dependent phonon transport, directly linking frequency-domain thermal response to interfacial energy transmission. Overall, this work positions PWA-TDTR as a versatile platform for investigating buried nonmetal-nonmetal interfaces in next-generation high-power and optoelectronic materials.&quot;, &quot;abstract_cn&quot;: &quot;这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是微电子器件与材料；摘要里最值得先关注的是功耗或能效表现。&quot;, &quot;overview_cn&quot;: &quot;如果按正文展开来看，这篇文章大概率会先说明微电子器件与材料的研究背景与问题设置，再依次介绍器件结构与设计思路、电学/光学表征与测试结果，最后用功耗或能效表现来支撑其结论与应用价值。&quot;}' data-uid="arxiv:2604.12539v1">
-              <div class="card-head">
-                <div>
-                  <div class="index">#3</div>
-                  <div class="meta-line">arXiv · 2026-04-14</div>
-                </div>
-                <button class="fav-btn" type="button">☆ 收藏</button>
-              </div>
-              <h2><a href="https://arxiv.org/abs/2604.12539v1" target="_blank" rel="noopener noreferrer">Thermal Characterization of Buried Interfaces in Multilayer Heterostructures via TDTR with Periodic Waveform Analysis</a></h2>
-              <div class="authors">作者：Mingzhen Zhang, Puqing Jiang, Ronggui Yang</div>
-              <div class="keywords"><span class="kw muted">无高亮关键词</span></div>
-              <section>
-                <h3>Abstract 原文</h3>
-                <p>Accurate evaluation of buried thermal interfaces is vital for understanding and optimizing heat dissipation in wide- and ultra-wide-bandgap (WBG/UWBG) semiconductor devices. Conventional time-domain thermoreflectance (TDTR) typically probes only near-surface transport due to its restricted modulation frequency range. Here, we employ a frequency-tunable periodic waveform analysis TDTR (PWA-TDTR) technique to perform depth-resolved thermal measurements on three representative systems: epitaxial ε-Ga2O3/SiC, GaN/Si, and mechanically bonded GaN/diamond. By combining broadband multi-frequency probing with sensitivity-guided joint fitting, we quantitively determine interfacial thermal conductance, layer-specific thermal conductivity, and volumetric heat capacity, without requiring destructive sample preparation. The results reveal that the buried Ga2O3/SiC interface exhibits weak phonon transmission due to acoustic mismatch; the transition layers in GaN/Si act as phonon-impedance gradients that redistribute heat flux; and the GaN/diamond boundary remains the dominant thermal bottleneck despite diamond&#x27;s ultrahigh bulk conductivity. These findings demonstrate that the modulation frequency in PWA-TDTR functions as a tunable probe of depth-dependent phonon transport, directly linking frequency-domain thermal response to interfacial energy transmission. Overall, this work positions PWA-TDTR as a versatile platform for investigating buried nonmetal-nonmetal interfaces in next-generation high-power and optoelectronic materials.</p>
-              </section>
-              <section>
-                <h3>中文摘要概括</h3>
-                <p>这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是微电子器件与材料；摘要里最值得先关注的是功耗或能效表现。</p>
-              </section>
-              <section>
-                <h3>正文概括（基于标题/摘要）</h3>
-                <p>如果按正文展开来看，这篇文章大概率会先说明微电子器件与材料的研究背景与问题设置，再依次介绍器件结构与设计思路、电学/光学表征与测试结果，最后用功耗或能效表现来支撑其结论与应用价值。</p>
-              </section>
-            </article><article class="card" data-paper='{&quot;uid&quot;: &quot;arxiv:2604.13662v1&quot;, &quot;source&quot;: &quot;arXiv&quot;, &quot;published&quot;: &quot;2026-04-15&quot;, &quot;title&quot;: &quot;Automatic Charge State Tuning of 300 mm FDSOI Quantum Dots Using Neural Network Segmentation of Charge Stability Diagram&quot;, &quot;url&quot;: &quot;https://arxiv.org/abs/2604.13662v1&quot;, &quot;authors&quot;: [&quot;Peter Samaha&quot;, &quot;Amine Torki&quot;, &quot;Ysaline Renaud&quot;, &quot;Sam Fiette&quot;, &quot;Emmanuel Chanrion&quot;, &quot;Pierre-Andre Mortemousque&quot;, &quot;Yann Beilliard&quot;], &quot;highlights&quot;: [], &quot;summary&quot;: &quot;Tuning of gate-defined semiconductor quantum dots (QDs) is a major bottleneck for scaling spin qubit technologies. We present a deep learning (DL) driven, semantic-segmentation pipeline that performs charge auto-tuning by locating transition lines in full charge stability diagrams (CSDs) and returns gate voltage targets for the single charge regime. We assemble and manually annotate a large, heterogeneous dataset of 1015 experimental CSDs measured from silicon QD devices, spanning nine design geometries, multiple wafers, and fabrication runs. A U-Net style convolutional neural network (CNN) with a MobileNetV2 encoder is trained and validated through five-fold group cross validation. Our model achieves an overall offline tuning success of 80.0% in locating the single-charge regime, with peak performance exceeding 88% for some designs. We analyze dominant failure modes and propose targeted mitigations. Finally, wide-range diagram segmentation also naturally enables scalable physic-based feature extraction that can feed back to fabrication and design workflows and outline a roadmap for real-time integration in a cryogenic wafer prober. Overall, our results show that neural network (NN) based wide-diagram segmentation is a practical step toward automated, high-throughput charge tuning for silicon QD qubits.&quot;, &quot;abstract_cn&quot;: &quot;这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是微电子器件与材料；摘要里最值得先关注的是性能提升、可靠性与稳定性、先进尺度下的可扩展性。&quot;, &quot;overview_cn&quot;: &quot;如果按正文展开来看，这篇文章大概率会先说明微电子器件与材料的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件、电学/光学表征与测试结果、机理分析或模型解释，最后用性能提升、可靠性与稳定性、先进尺度下的可扩展性来支撑其结论与应用价值。&quot;}' data-uid="arxiv:2604.13662v1">
-              <div class="card-head">
-                <div>
-                  <div class="index">#4</div>
-                  <div class="meta-line">arXiv · 2026-04-15</div>
-                </div>
-                <button class="fav-btn" type="button">☆ 收藏</button>
-              </div>
-              <h2><a href="https://arxiv.org/abs/2604.13662v1" target="_blank" rel="noopener noreferrer">Automatic Charge State Tuning of 300 mm FDSOI Quantum Dots Using Neural Network Segmentation of Charge Stability Diagram</a></h2>
-              <div class="authors">作者：Peter Samaha, Amine Torki, Ysaline Renaud, Sam Fiette, Emmanuel Chanrion, Pierre-Andre Mortemousque, Yann Beilliard</div>
-              <div class="keywords"><span class="kw muted">无高亮关键词</span></div>
-              <section>
-                <h3>Abstract 原文</h3>
-                <p>Tuning of gate-defined semiconductor quantum dots (QDs) is a major bottleneck for scaling spin qubit technologies. We present a deep learning (DL) driven, semantic-segmentation pipeline that performs charge auto-tuning by locating transition lines in full charge stability diagrams (CSDs) and returns gate voltage targets for the single charge regime. We assemble and manually annotate a large, heterogeneous dataset of 1015 experimental CSDs measured from silicon QD devices, spanning nine design geometries, multiple wafers, and fabrication runs. A U-Net style convolutional neural network (CNN) with a MobileNetV2 encoder is trained and validated through five-fold group cross validation. Our model achieves an overall offline tuning success of 80.0% in locating the single-charge regime, with peak performance exceeding 88% for some designs. We analyze dominant failure modes and propose targeted mitigations. Finally, wide-range diagram segmentation also naturally enables scalable physic-based feature extraction that can feed back to fabrication and design workflows and outline a roadmap for real-time integration in a cryogenic wafer prober. Overall, our results show that neural network (NN) based wide-diagram segmentation is a practical step toward automated, high-throughput charge tuning for silicon QD qubits.</p>
-              </section>
-              <section>
-                <h3>中文摘要概括</h3>
-                <p>这段摘要主要在说：作者提出并实现一套新的方案或器件思路，研究对象是微电子器件与材料；摘要里最值得先关注的是性能提升、可靠性与稳定性、先进尺度下的可扩展性。</p>
-              </section>
-              <section>
-                <h3>正文概括（基于标题/摘要）</h3>
-                <p>如果按正文展开来看，这篇文章大概率会先说明微电子器件与材料的研究背景与问题设置，再依次介绍器件结构与设计思路、制备流程与工艺条件、电学/光学表征与测试结果、机理分析或模型解释，最后用性能提升、可靠性与稳定性、先进尺度下的可扩展性来支撑其结论与应用价值。</p>
-              </section>
-            </article>
+    <article class="card"><p>No matching new papers have been identified in the last 7 days yet.</p></article>
   </div>
 
   <script>
     const FAVORITES_KEY = 'paper_digest_favorites_v1';
     const THEME_KEY = 'paper_digest_theme_v1';
+    const themeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    function getStoredTheme() {
+      try { return localStorage.getItem(THEME_KEY); } catch { return null; }
+    }
+    function getPreferredTheme() {
+      const stored = getStoredTheme();
+      if (stored === 'light' || stored === 'dark') return stored;
+      return themeQuery && themeQuery.matches ? 'dark' : 'light';
+    }
+    function applyTheme(theme, options = {}) {
+      const shouldAnimate = options.animate !== false;
+      if (shouldAnimate) document.documentElement.classList.add('theme-animating');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.style.colorScheme = theme;
+      if (shouldAnimate) {
+        clearTimeout(window.__themeAnimTimer);
+        window.__themeAnimTimer = setTimeout(() => {
+          document.documentElement.classList.remove('theme-animating');
+        }, 750);
+      }
+    }
+    function updateThemeToggle(theme = null, options = {}) {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      const stored = getStoredTheme();
+      const current = theme || document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      const nextX = current === 'dark' ? 44 : 0;
+      const thumb = btn.querySelector('.theme-toggle-thumb');
+      const prevX = Number(btn.dataset.x || (document.documentElement.getAttribute('data-theme') === 'dark' ? 44 : 0));
+      btn.dataset.theme = current;
+      btn.dataset.mode = stored ? 'manual' : 'system';
+      btn.dataset.x = String(nextX);
+      btn.style.setProperty('--toggle-x', `${nextX}px`);
+      if (thumb && options.animate && thumb.animate) {
+        try {
+          if (btn.__thumbAnim) btn.__thumbAnim.cancel();
+          btn.__thumbAnim = thumb.animate(
+            [
+              { transform: `translate3d(${prevX}px, 0, 0)` },
+              { transform: `translate3d(${nextX}px, 0, 0)` }
+            ],
+            {
+              duration: 750,
+              easing: 'cubic-bezier(.22,.61,.36,1)',
+              fill: 'forwards'
+            }
+          );
+        } catch {}
+      }
+      const modeLabel = stored ? `Manual ${current} mode` : `Following system (${current})`;
+      btn.setAttribute('aria-label', `Theme toggle. ${modeLabel}. Click to switch. Double-click quickly or right-click to follow the system setting.`);
+      btn.title = stored
+        ? 'Manual theme mode. Click to switch between light and dark. Double-click quickly or right-click to follow the system setting.'
+        : 'Currently following the system theme. Click to switch manually.';
+    }
+    function setThemePreference(next) {
+      const targetTheme = next === null ? getPreferredTheme() : next;
+      const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      if (next === null) {
+        try { localStorage.removeItem(THEME_KEY); } catch {}
+      } else {
+        try { localStorage.setItem(THEME_KEY, next); } catch {}
+      }
+      if (targetTheme === currentTheme) {
+        applyTheme(targetTheme, { animate: false });
+        updateThemeToggle(targetTheme, { animate: false });
+        return;
+      }
+      updateThemeToggle(targetTheme, { animate: true });
+      requestAnimationFrame(() => {
+        applyTheme(targetTheme);
+      });
+    }
+    function cycleThemePreference() {
+      const stored = getStoredTheme();
+      const current = stored || getPreferredTheme();
+      const next = current === 'dark' ? 'light' : 'dark';
+      setThemePreference(next);
+    }
     function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
-    }
-    function applyTheme(theme) {
-      const root = document.documentElement;
-      if (theme === 'light') {
-        root.setAttribute('data-theme', 'light');
-      } else {
-        root.removeAttribute('data-theme');
-        theme = 'dark';
-      }
-      const btn = document.getElementById('theme-toggle');
-      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
-      localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
@@ -164,7 +221,7 @@
     }
     function favCardHtml(paper) {
       const authors = (paper.authors || []).join(', ') || '—';
-      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">无高亮关键词</span>';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">No highlighted keywords</span>';
       return `
       <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
         <div class="fav-top">
@@ -172,9 +229,9 @@
             <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
             <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
           </div>
-          <button class="remove-fav" type="button">移出</button>
+          <button class="remove-fav" type="button">Remove</button>
         </div>
-        <div class="authors">作者：${escapeHtml(authors)}</div>
+        <div class="authors">Authors: ${escapeHtml(authors)}</div>
         <div class="keywords">${kws}</div>
       </article>`;
     }
@@ -182,7 +239,7 @@
       const wrap = document.getElementById('favorites-list');
       const items = loadFavorites();
       if (!items.length) {
-        wrap.innerHTML = '<article class="fav-card"><p>还没有收藏的论文。看到喜欢的就点“收藏”。</p></article>';
+        wrap.innerHTML = '<article class="fav-card"><p>No saved papers yet. Use “Save” on any paper you want to keep.</p></article>';
         return;
       }
       wrap.innerHTML = items.map(favCardHtml).join('');
@@ -203,7 +260,7 @@
         if (!btn) return;
         const paper = JSON.parse(card.dataset.paper);
         const active = ids.has(paper.uid);
-        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
+        btn.textContent = active ? '★ Saved' : '☆ Save';
         btn.classList.toggle('active', active);
       });
     }
@@ -225,12 +282,40 @@
       syncButtons();
     }
     document.addEventListener('DOMContentLoaded', () => {
-      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
-      const themeBtn = document.getElementById('theme-toggle');
-      if (themeBtn) themeBtn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-        applyTheme(current === 'light' ? 'dark' : 'light');
-      });
+      applyTheme(getPreferredTheme(), { animate: false });
+      const toggle = document.getElementById('theme-toggle');
+      if (toggle) {
+        updateThemeToggle();
+        let clickTimer = null;
+        toggle.addEventListener('click', () => {
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            setThemePreference(null);
+            return;
+          }
+          clickTimer = setTimeout(() => {
+            clickTimer = null;
+            cycleThemePreference();
+          }, 180);
+        });
+        toggle.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+          }
+          setThemePreference(null);
+        });
+      }
+      if (themeQuery && typeof themeQuery.addEventListener === 'function') {
+        themeQuery.addEventListener('change', () => {
+          if (!getStoredTheme()) {
+            applyTheme(getPreferredTheme(), { animate: false });
+            updateThemeToggle();
+          }
+        });
+      }
       renderFavorites();
       bindButtons();
     });
