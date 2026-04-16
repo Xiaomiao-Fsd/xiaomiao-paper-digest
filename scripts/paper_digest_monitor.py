@@ -591,11 +591,13 @@ def render_error_html(errors: list[str]) -> str:
     return '<div class="note warning">本次抓取异常：' + escape("、".join(errors)) + "</div>"
 
 
-def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime, mobile_url: str) -> str:
+def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime, mobile_url: str, ok: bool = True, status_message: str | None = None) -> str:
     date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
+    row_payloads = []
     rows = []
     for idx, item in enumerate(items, 1):
-        authors = escape(", ".join(item.authors)) if item.authors else "—"
+        authors = ", ".join(item.authors) if item.authors else "—"
         keywords = item.highlights or []
         keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in keywords) if keywords else "—"
         abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
@@ -603,14 +605,28 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         overview = escape(item.overview_cn or "—")
         title = escape(item.title)
         link = escape(item.url)
+        payload = {
+            "uid": item.uid,
+            "source": item.source,
+            "published": item.published,
+            "title": item.title,
+            "url": item.url,
+            "authors": item.authors or [],
+            "highlights": keywords,
+            "summary": item.summary or "（该来源未提供 abstract / summary）",
+            "abstract_cn": item.abstract_cn or "—",
+            "overview_cn": item.overview_cn or "—",
+        }
+        row_payloads.append(payload)
         rows.append(
             f"""
-            <tr>
+            <tr data-paper='{escape(json.dumps(payload, ensure_ascii=False))}'>
               <td>{idx}</td>
+              <td><button class=\"fav-btn\" type=\"button\">☆ 收藏</button></td>
               <td>{escape(item.source)}</td>
               <td>{escape(item.published)}</td>
               <td><a href=\"{link}\" target=\"_blank\" rel=\"noopener noreferrer\">{title}</a></td>
-              <td>{authors}</td>
+              <td>{escape(authors)}</td>
               <td>{keyword_html}</td>
               <td class=\"abstract\">{abstract}</td>
               <td class=\"abstract-cn\">{abstract_cn}</td>
@@ -620,7 +636,111 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         )
 
     if not rows:
-        rows.append('<tr><td colspan="9">今天暂时没有命中的新论文。</td></tr>')
+        rows.append('<tr><td colspan="10">今天暂时没有命中的新论文。</td></tr>')
+
+    favorites_script = """
+  <script>
+    const FAVORITES_KEY = 'paper_digest_favorites_v1';
+    const THEME_KEY = 'paper_digest_theme_v1';
+    function loadFavorites() {
+      try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
+    }
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        theme = 'dark';
+      }
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    function saveFavorites(items) {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
+    }
+    function escapeHtml(text) {
+      return String(text ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function paperCardHtml(paper) {
+      const authors = (paper.authors || []).join(', ') || '—';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="muted">无关键词</span>';
+      return `
+        <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
+          <div class="fav-head">
+            <div>
+              <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
+              <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
+            </div>
+            <button class="remove-fav" type="button">移出收藏</button>
+          </div>
+          <div class="fav-authors">作者：${escapeHtml(authors)}</div>
+          <div class="fav-kws">${kws}</div>
+          <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
+          <div class="fav-section"><strong>中文摘要概括</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
+          <div class="fav-section"><strong>正文概括</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
+        </article>`;
+    }
+    function renderFavorites() {
+      const wrap = document.getElementById('favorites-list');
+      const items = loadFavorites();
+      if (!items.length) {
+        wrap.innerHTML = '<div class="empty-fav">还没有收藏的论文。看到感兴趣的就点右边的“收藏”。</div>';
+        return;
+      }
+      wrap.innerHTML = items.map(paperCardHtml).join('');
+      wrap.querySelectorAll('.remove-fav').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const card = btn.closest('.fav-card');
+          const uid = card?.dataset?.uid;
+          const next = loadFavorites().filter(item => item.uid !== uid);
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+    }
+    function syncButtons() {
+      const favs = new Set(loadFavorites().map(item => item.uid));
+      document.querySelectorAll('tr[data-paper]').forEach(tr => {
+        const btn = tr.querySelector('.fav-btn');
+        if (!btn) return;
+        const paper = JSON.parse(tr.dataset.paper);
+        const active = favs.has(paper.uid);
+        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
+        btn.classList.toggle('active', active);
+      });
+    }
+    function bindTableButtons() {
+      document.querySelectorAll('tr[data-paper]').forEach(tr => {
+        const btn = tr.querySelector('.fav-btn');
+        if (!btn || btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          const paper = JSON.parse(tr.dataset.paper);
+          const items = loadFavorites();
+          const exists = items.some(item => item.uid === paper.uid);
+          const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+      syncButtons();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+      renderFavorites();
+      bindTableButtons();
+    });
+  </script>
+    """
 
     return f"""<!doctype html>
 <html lang=\"zh-CN\">
@@ -629,27 +749,69 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
   <title>微电子论文晨报｜PC版</title>
   <style>
-    :root {{ color-scheme: dark; }}
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: #0b1020; color: #eaf0ff; }}
+    :root {{
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121933;
+      --panel-2: #0f1730;
+      --panel-3: #18203a;
+      --border: #243054;
+      --text: #eaf0ff;
+      --text-soft: #a9b6d3;
+      --link: #8bc4ff;
+      --pill: #22305a;
+      --accent: #6c4ad3;
+      --warning-bg: #3a2318;
+      --warning-text: #ffd4b5;
+    }}
+    :root[data-theme='light'] {{
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8faff;
+      --panel-3: #eef3ff;
+      --border: #d7e0f3;
+      --text: #1f2a44;
+      --text-soft: #5c6b89;
+      --link: #295fd6;
+      --pill: #e7eeff;
+      --accent: #5a48d6;
+      --warning-bg: #fff2e8;
+      --warning-text: #9a4d16;
+    }}
+    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: var(--bg); color: var(--text); }}
     h1 {{ margin: 0 0 8px; font-size: 28px; }}
-    .sub {{ color: #a9b6d3; margin-bottom: 18px; }}
+    h2 {{ margin: 0 0 12px; font-size: 22px; }}
+    .sub {{ color: var(--text-soft); margin-bottom: 18px; }}
     .topbar {{ display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }}
-    .nav a {{ color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-left: 8px; }}
-    .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: #18203a; }}
-    .warning {{ background: #3a2318; color: #ffd4b5; }}
-    .meta {{ display: flex; gap: 18px; flex-wrap: wrap; margin: 14px 0 18px; color: #b6c2de; }}
-    .badge {{ display: inline-block; padding: 3px 8px; border-radius: 999px; background: #22305a; color: #dce6ff; font-size: 12px; margin-right: 6px; }}
-    .table-wrap {{ overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px #243054 inset; }}
-    table {{ width: 100%; min-width: 1900px; border-collapse: collapse; background: #121933; }}
-    th, td {{ border: 1px solid #243054; padding: 12px; vertical-align: top; text-align: left; }}
-    th {{ background: #18203a; position: sticky; top: 0; z-index: 1; }}
-    tr:nth-child(even) td {{ background: #0f1730; }}
-    a {{ color: #8bc4ff; text-decoration: none; }}
+    .top-actions {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
+    .nav a, .theme-btn {{ color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; }}
+    .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--panel-3); }}
+    .warning {{ background: var(--warning-bg); color: var(--warning-text); }}
+    .section {{ margin: 0 0 20px; }}
+    .favorites {{ background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 20px; }}
+    .favorites-sub {{ color: var(--text-soft); margin: 0 0 14px; }}
+    .favorites-list {{ display: grid; gap: 14px; }}
+    .fav-card {{ border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--panel-2); }}
+    .fav-head {{ display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 8px; }}
+    .fav-title a {{ color: var(--text); font-size: 18px; text-decoration: none; }}
+    .fav-meta, .fav-authors {{ color: var(--text-soft); font-size: 13px; }}
+    .fav-section {{ margin-top: 10px; }}
+    .fav-section p {{ margin: 6px 0 0; white-space: pre-wrap; line-height: 1.65; }}
+    .remove-fav, .fav-btn {{ border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }}
+    .fav-btn.active {{ background: var(--accent); color: #fff; }}
+    .empty-fav {{ color: var(--text-soft); }}
+    .table-wrap {{ overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--border) inset; }}
+    table {{ width: 100%; min-width: 2000px; border-collapse: collapse; background: var(--panel); }}
+    th, td {{ border: 1px solid var(--border); padding: 12px; vertical-align: top; text-align: left; }}
+    th {{ background: var(--panel-3); position: sticky; top: 0; z-index: 1; }}
+    tr:nth-child(even) td {{ background: var(--panel-2); }}
+    a {{ color: var(--link); text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
     .abstract {{ min-width: 360px; white-space: pre-wrap; line-height: 1.55; }}
     .abstract-cn, .overview {{ min-width: 300px; white-space: pre-wrap; line-height: 1.6; }}
-    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; }}
-    .hint {{ color: #8fa1c9; font-size: 13px; margin-top: 10px; }}
+    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; }}
+    .muted {{ color: var(--text-soft); }}
   </style>
 </head>
 <body>
@@ -658,51 +820,75 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
       <h1>微电子 / 集成电路论文晨报 · PC版</h1>
       <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
     </div>
-    <div class=\"nav\"><a href=\"{escape(mobile_url)}\">切到手机版</a></div>
+    <div class=\"top-actions\">
+      <button id=\"theme-toggle\" class=\"theme-btn\" type=\"button\">🌙 深色</button>
+      <div class=\"nav\"><a href=\"{escape(mobile_url)}\">切到手机版</a></div>
+    </div>
   </div>
-  <div class=\"meta\">
-    <div><span class=\"badge\">来源</span>arXiv / Science Advances / Nature Electronics / Nature Materials</div>
-    <div><span class=\"badge\">策略</span>先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
-  </div>
+  <section class=\"favorites section\">
+    <h2>收藏夹</h2>
+    <p class=\"favorites-sub\">你收藏过的论文会长期保留在这台设备的浏览器里，后面打开页面也还在。</p>
+    <div id=\"favorites-list\" class=\"favorites-list\"></div>
+  </section>
   {render_error_html(errors)}
-  <div class=\"table-wrap\">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>来源</th>
-          <th>日期</th>
-          <th>标题 / 链接</th>
-          <th>作者</th>
-          <th>关键词</th>
-          <th>Abstract 原文</th>
-          <th>中文摘要概括</th>
-          <th>正文概括（基于标题/摘要）</th>
-        </tr>
-      </thead>
-      <tbody>
-        {''.join(rows)}
-      </tbody>
-    </table>
-  </div>
-  <div class=\"hint\">说明：右侧“正文概括”目前是基于标题与摘要自动生成的阅读导向版总结；如果后面要进一步抓正文，我也可以继续补。</div>
+  {status_banner_html}
+  <section class=\"section\">
+    <div class=\"table-wrap\">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>收藏</th>
+            <th>来源</th>
+            <th>日期</th>
+            <th>标题 / 链接</th>
+            <th>作者</th>
+            <th>关键词</th>
+            <th>Abstract 原文</th>
+            <th>中文摘要概括</th>
+            <th>正文概括（基于标题/摘要）</th>
+          </tr>
+        </thead>
+        <tbody>
+          {''.join(rows)}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{favorites_script}
 </body>
 </html>
 """
 
 
-def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, desktop_url: str) -> str:
+def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, desktop_url: str, ok: bool = True, status_message: str | None = None) -> str:
     date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
     cards = []
     for idx, item in enumerate(items, 1):
         authors = escape(", ".join(item.authors)) if item.authors else "—"
         keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in (item.highlights or [])) or '<span class="kw muted">无高亮关键词</span>'
+        payload = {
+            "uid": item.uid,
+            "source": item.source,
+            "published": item.published,
+            "title": item.title,
+            "url": item.url,
+            "authors": item.authors or [],
+            "highlights": item.highlights or [],
+            "summary": item.summary or "（该来源未提供 abstract / summary）",
+            "abstract_cn": item.abstract_cn or "—",
+            "overview_cn": item.overview_cn or "—",
+        }
         cards.append(
             f"""
-            <article class=\"card\">
+            <article class=\"card\" data-paper='{escape(json.dumps(payload, ensure_ascii=False))}' data-uid=\"{escape(item.uid)}\">
               <div class=\"card-head\">
-                <div class=\"index\">#{idx}</div>
-                <div class=\"meta-line\">{escape(item.source)} · {escape(item.published)}</div>
+                <div>
+                  <div class=\"index\">#{idx}</div>
+                  <div class=\"meta-line\">{escape(item.source)} · {escape(item.published)}</div>
+                </div>
+                <button class=\"fav-btn\" type=\"button\">☆ 收藏</button>
               </div>
               <h2><a href=\"{escape(item.url)}\" target=\"_blank\" rel=\"noopener noreferrer\">{escape(item.title)}</a></h2>
               <div class=\"authors\">作者：{authors}</div>
@@ -726,6 +912,106 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
     if not cards:
         cards.append('<article class="card"><p>今天暂时没有命中的新论文。</p></article>')
 
+    favorites_script = """
+  <script>
+    const FAVORITES_KEY = 'paper_digest_favorites_v1';
+    const THEME_KEY = 'paper_digest_theme_v1';
+    function loadFavorites() {
+      try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
+    }
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        theme = 'dark';
+      }
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    function saveFavorites(items) {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
+    }
+    function escapeHtml(text) {
+      return String(text ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function favCardHtml(paper) {
+      const authors = (paper.authors || []).join(', ') || '—';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">无高亮关键词</span>';
+      return `
+      <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
+        <div class="fav-top">
+          <div>
+            <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
+            <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
+          </div>
+          <button class="remove-fav" type="button">移出</button>
+        </div>
+        <div class="authors">作者：${escapeHtml(authors)}</div>
+        <div class="keywords">${kws}</div>
+      </article>`;
+    }
+    function renderFavorites() {
+      const wrap = document.getElementById('favorites-list');
+      const items = loadFavorites();
+      if (!items.length) {
+        wrap.innerHTML = '<article class="fav-card"><p>还没有收藏的论文。看到喜欢的就点“收藏”。</p></article>';
+        return;
+      }
+      wrap.innerHTML = items.map(favCardHtml).join('');
+      wrap.querySelectorAll('.remove-fav').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = btn.closest('.fav-card')?.dataset?.uid;
+          const next = loadFavorites().filter(item => item.uid !== uid);
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+    }
+    function syncButtons() {
+      const ids = new Set(loadFavorites().map(item => item.uid));
+      document.querySelectorAll('.card[data-paper]').forEach(card => {
+        const btn = card.querySelector('.fav-btn');
+        if (!btn) return;
+        const paper = JSON.parse(card.dataset.paper);
+        const active = ids.has(paper.uid);
+        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
+        btn.classList.toggle('active', active);
+      });
+    }
+    function bindButtons() {
+      document.querySelectorAll('.card[data-paper]').forEach(card => {
+        const btn = card.querySelector('.fav-btn');
+        if (!btn || btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          const paper = JSON.parse(card.dataset.paper);
+          const items = loadFavorites();
+          const exists = items.some(item => item.uid === paper.uid);
+          const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+      syncButtons();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+      renderFavorites();
+      bindButtons();
+    });
+  </script>
+    """
+
     return f"""<!doctype html>
 <html lang=\"zh-CN\">
 <head>
@@ -733,25 +1019,31 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\" />
   <title>微电子论文晨报｜手机版</title>
   <style>
-    :root {{ color-scheme: dark; }}
-    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; }}
+    :root {{ color-scheme: dark; --bg:#0b1020; --panel:#121933; --panel2:#0f1730; --panel3:#18203a; --border:#243054; --text:#eef3ff; --soft:#a9b6d3; --link:#8bc4ff; --pill:#22305a; --accent:#6c4ad3; --warnbg:#3a2318; --warntext:#ffd4b5; }}
+    :root[data-theme='light'] {{ color-scheme: light; --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8faff; --panel3:#eef3ff; --border:#d7e0f3; --text:#1f2a44; --soft:#5c6b89; --link:#295fd6; --pill:#e7eeff; --accent:#5a48d6; --warnbg:#fff2e8; --warntext:#9a4d16; }}
+    body {{ margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }}
     .shell {{ padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }}
     h1 {{ font-size: 24px; margin: 0 0 6px; }}
-    .sub {{ color: #a9b6d3; margin-bottom: 12px; font-size: 14px; }}
-    .nav a {{ display: inline-block; color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-bottom: 14px; }}
-    .meta, .note {{ background: #121933; border: 1px solid #243054; border-radius: 14px; padding: 12px; margin-bottom: 12px; }}
-    .warning {{ background: #3a2318; color: #ffd4b5; }}
-    .card {{ background: #121933; border: 1px solid #243054; border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }}
-    .card-head {{ display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }}
-    .index {{ font-weight: 700; color: #7cc2ff; }}
-    h2 {{ font-size: 18px; line-height: 1.45; margin: 0 0 10px; }}
-    h2 a {{ color: #eef3ff; text-decoration: none; }}
-    h3 {{ margin: 14px 0 6px; font-size: 15px; color: #8bc4ff; }}
-    p {{ margin: 0; white-space: pre-wrap; line-height: 1.65; color: #e4ebff; font-size: 14px; }}
-    .authors {{ color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }}
-    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; font-size: 12px; }}
-    .muted {{ color: #b7c6e6; }}
-    .hint {{ color: #8fa1c9; font-size: 12px; margin-top: 8px; line-height: 1.6; }}
+    h2 {{ font-size: 20px; margin: 0 0 10px; }}
+    .sub {{ color: var(--soft); margin-bottom: 12px; font-size: 14px; }}
+    .top-actions {{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }}
+    .nav a, .theme-btn {{ display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }}
+    .note {{ background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }}
+    .warning {{ background: var(--warnbg); color: var(--warntext); }}
+    .favorites {{ background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }}
+    .favorites-sub {{ color: var(--soft); font-size: 13px; margin: 0 0 10px; }}
+    .fav-card, .card {{ background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }}
+    .fav-top, .card-head {{ display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--soft); font-size: 13px; margin-bottom: 10px; }}
+    .index {{ font-weight: 700; color: var(--link); }}
+    h2 a, .fav-title a {{ color: var(--text); text-decoration: none; }}
+    h2 {{ line-height: 1.45; margin: 0 0 10px; }}
+    h3 {{ margin: 14px 0 6px; font-size: 15px; color: var(--link); }}
+    p {{ margin: 0; white-space: pre-wrap; line-height: 1.65; color: var(--text); font-size: 14px; }}
+    .authors, .fav-meta {{ color: var(--soft); font-size: 13px; margin-bottom: 10px; }}
+    .kw {{ display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; font-size: 12px; }}
+    .muted {{ color: var(--soft); }}
+    .fav-btn, .remove-fav {{ border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }}
+    .fav-btn.active {{ background: var(--accent); color:#fff; }}
   </style>
 </head>
 <body>
@@ -759,11 +1051,16 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
     <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
     <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
     <div class=\"nav\"><a href=\"{escape(desktop_url)}\">切到PC版</a></div>
-    <div class=\"meta\">来源：arXiv / Science Advances / Nature Electronics / Nature Materials<br>策略：先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
+    <section class=\"favorites\">
+      <h2>收藏夹</h2>
+      <p class=\"favorites-sub\">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
+      <div id=\"favorites-list\"></div>
+    </section>
     {render_error_html(errors)}
+    {status_banner_html}
     {''.join(cards)}
-    <div class=\"hint\">说明：正文概括目前是基于标题与摘要自动生成，适合手机快速扫读。</div>
   </div>
+{favorites_script}
 </body>
 </html>
 """
@@ -919,76 +1216,102 @@ def main() -> int:
     json_path = Path(args.json_file)
     desktop_url = sibling_url(args.web_url, "desktop.html")
     mobile_url = sibling_url(args.web_url, "mobile.html")
-    state = load_state(state_path)
-    seen_ids: dict[str, int] = {k: int(v) for k, v in state.get("seen_ids", {}).items() if isinstance(v, (int, float, str))}
-    now_ts = int(time.time())
-    seen_ids = {k: v for k, v in seen_ids.items() if now_ts - int(v) < 90 * 86400}
-
-    cutoff = datetime.now(UTC) - timedelta(days=args.days_back)
-    session = build_session(args.proxy)
-
-    all_papers: list[Paper] = []
-    errors: list[str] = []
-
-    try:
-        all_papers.extend(fetch_arxiv(session, cutoff, args.proxy))
-    except Exception:
-        errors.append("arXiv")
-    try:
-        all_papers.extend(fetch_science_advances(session, cutoff, args.proxy))
-    except Exception:
-        errors.append("Science Advances")
-    for source, url in NATURE_FEEDS.items():
-        try:
-            all_papers.extend(fetch_nature_feed(session, source, url, cutoff, args.proxy))
-        except Exception:
-            errors.append(source)
-
-    ranked = rank_and_filter(all_papers)
-    unseen = [paper for paper in ranked if paper.uid not in seen_ids]
-    selected = unseen[: args.max_items]
-
     run_dt = datetime.now(UTC)
-    for paper in selected:
-        paper.abstract_cn = build_abstract_cn(paper)
-        paper.overview_cn = build_overview_cn(paper)
-    message = build_message(selected, errors, run_dt)
 
-    for paper in unseen:
-        seen_ids[paper.uid] = now_ts
+    def write_failure_payload(message: str, errors: list[str] | None = None) -> None:
+        payload = {
+            "ok": False,
+            "new_count": 0,
+            "selected_count": 0,
+            "message": message,
+            "papers": [],
+            "errors": errors or [],
+            "report_url": args.web_url,
+            "report_url_pc": desktop_url,
+            "report_url_mobile": mobile_url,
+            "generated_at": run_dt.isoformat(),
+        }
+        html_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    save_state(
-        state_path,
-        {
-            "seen_ids": seen_ids,
-            "last_run_at": run_dt.isoformat(),
-            "last_selected_ids": [paper.uid for paper in selected],
-        },
-    )
+    try:
+        state = load_state(state_path)
+        seen_ids: dict[str, int] = {k: int(v) for k, v in state.get("seen_ids", {}).items() if isinstance(v, (int, float, str))}
+        now_ts = int(time.time())
+        seen_ids = {k: v for k, v in seen_ids.items() if now_ts - int(v) < 90 * 86400}
 
-    html_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.parent.mkdir(parents=True, exist_ok=True)
+        cutoff = datetime.now(UTC) - timedelta(days=args.days_back)
+        session = build_session(args.proxy)
 
-    payload = {
-        "ok": True,
-        "new_count": len(unseen),
-        "selected_count": len(selected),
-        "message": message,
-        "papers": [asdict(paper) for paper in selected],
-        "errors": errors,
-        "report_url": args.web_url,
-        "report_url_pc": desktop_url,
-        "report_url_mobile": mobile_url,
-        "generated_at": run_dt.isoformat(),
-    }
+        all_papers: list[Paper] = []
+        errors: list[str] = []
 
-    html_path.write_text(render_index_html(desktop_url, mobile_url), encoding="utf-8")
-    desktop_html_path.write_text(render_desktop_html(selected, errors, run_dt, mobile_url), encoding="utf-8")
-    mobile_html_path.write_text(render_mobile_html(selected, errors, run_dt, desktop_url), encoding="utf-8")
-    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        try:
+            all_papers.extend(fetch_arxiv(session, cutoff, args.proxy))
+        except Exception:
+            errors.append("arXiv")
+        try:
+            all_papers.extend(fetch_science_advances(session, cutoff, args.proxy))
+        except Exception:
+            errors.append("Science Advances")
+        for source, url in NATURE_FEEDS.items():
+            try:
+                all_papers.extend(fetch_nature_feed(session, source, url, cutoff, args.proxy))
+            except Exception:
+                errors.append(source)
 
-    print(json.dumps(payload, ensure_ascii=False))
-    return 0
+        ranked = rank_and_filter(all_papers)
+        unseen = [paper for paper in ranked if paper.uid not in seen_ids]
+        selected = unseen[: args.max_items]
+
+        run_dt = datetime.now(UTC)
+        for paper in selected:
+            paper.abstract_cn = build_abstract_cn(paper)
+            paper.overview_cn = build_overview_cn(paper)
+        message = build_message(selected, errors, run_dt)
+
+        for paper in unseen:
+            seen_ids[paper.uid] = now_ts
+
+        save_state(
+            state_path,
+            {
+                "seen_ids": seen_ids,
+                "last_run_at": run_dt.isoformat(),
+                "last_selected_ids": [paper.uid for paper in selected],
+            },
+        )
+
+        html_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+
+        payload = {
+            "ok": True,
+            "new_count": len(unseen),
+            "selected_count": len(selected),
+            "message": message,
+            "papers": [asdict(paper) for paper in selected],
+            "errors": errors,
+            "report_url": args.web_url,
+            "report_url_pc": desktop_url,
+            "report_url_mobile": mobile_url,
+            "generated_at": run_dt.isoformat(),
+        }
+
+        html_path.write_text(render_index_html(desktop_url, mobile_url), encoding="utf-8")
+        desktop_html_path.write_text(render_desktop_html(selected, errors, run_dt, mobile_url), encoding="utf-8")
+        mobile_html_path.write_text(render_mobile_html(selected, errors, run_dt, desktop_url), encoding="utf-8")
+        json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        print(json.dumps(payload, ensure_ascii=False))
+        return 0
+    except Exception as exc:
+        write_failure_payload(
+            f"论文晨报生成失败（{run_dt.astimezone(ZoneInfo('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M')} Asia/Shanghai）\n错误：{type(exc).__name__}: {exc}",
+            errors=[type(exc).__name__],
+        )
+        raise
 
 
 if __name__ == "__main__":
