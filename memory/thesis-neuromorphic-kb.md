@@ -39,7 +39,9 @@
 
 - 恢复出的较新工作底稿来源：`/home/XiaomiaoClaw/.openclaw/workspace/tmp/Report_chapter2_patent_calibrated_1776166139.docx`
 - 新生成的续写稿：`/home/XiaomiaoClaw/.openclaw/workspace/tmp/Report_chapter3_1_comsol_draft_1776489312.docx`
-- 已写入内容：第 3 章中 `NPP/PNP模型、边界条件与参数设置` 下的引入段，以及 `控制方程与求解区域`、`边界条件与参数设定` 两个小节正文
+- 用户基于此前版本补写并回传了：`/home/XiaomiaoClaw/.openclaw/qqbot/downloads/Report_1776488081235.docx`
+- 已进一步整理增强版：`/home/XiaomiaoClaw/.openclaw/workspace/tmp/Report_3_1_formula_enriched_1776492244.docx`
+- 已写入内容：第 3 章中 `控制方程、求解区域与参数设置` 相关段落；显式补入了 3 条与 COMSOL 相关的公式（准稳态 Nernst–Planck 通量平衡、Poisson 方程、净离子电荷积分式），并补足变量定义与物理作用说明
 - 下一优先续写目标：第 3 章 `不同侧栅间距下离子浓度/电势分布`，再往后是 `非单调离子迁移效率序列的形成条件与敏感性分析`
 
 ## 文献映射简记
