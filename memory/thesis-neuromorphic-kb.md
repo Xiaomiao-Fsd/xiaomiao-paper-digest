@@ -33,6 +33,14 @@
 - 条理与章节拆分参考开题报告。
 - 之前整理好的 PDF 文献合集继续作为主要参考来源。
 - 当用户再次提到 1.2.1 / 1.2.2 / 1.2.3 时，优先先看 KB 索引和参考文献映射再动笔。
+- 2026-04-18 已恢复并同步较新的主稿版本；当前 KB 的 `sources/current_thesis_report.docx` 已不再是 4 月 12 日那份旧副本，而是包含完整第 1 章、已写第 2 章和新起草的第 3.1 节的方法稿。
+
+## 最新工作断点（2026-04-18）
+
+- 恢复出的较新工作底稿来源：`/home/XiaomiaoClaw/.openclaw/workspace/tmp/Report_chapter2_patent_calibrated_1776166139.docx`
+- 新生成的续写稿：`/home/XiaomiaoClaw/.openclaw/workspace/tmp/Report_chapter3_1_comsol_draft_1776489312.docx`
+- 已写入内容：第 3 章中 `NPP/PNP模型、边界条件与参数设置` 下的引入段，以及 `控制方程与求解区域`、`边界条件与参数设定` 两个小节正文
+- 下一优先续写目标：第 3 章 `不同侧栅间距下离子浓度/电势分布`，再往后是 `非单调离子迁移效率序列的形成条件与敏感性分析`
 
 ## 文献映射简记
 
