@@ -161,7 +161,7 @@ class Paper:
     priority: int = 0
     highlights: list[str] = field(default_factory=list)
     abstract_cn: str = ""
-    overview_cn: str = ""
+    keyword_extract: str = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -188,6 +188,17 @@ def strip_html(text: str) -> str:
 def short(text: str, limit: int = 108) -> str:
     text = normalize_space(text)
     return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def sibling_url(base_url: str, sibling_name: str) -> str:
+    parts = list(urlsplit(base_url))
+    path = parts[2] or "/"
+    if path.endswith("/"):
+        path = path + sibling_name
+    else:
+        path = path.rsplit("/", 1)[0] + "/" + sibling_name
+    parts[2] = path
+    return urlunsplit(parts)
 
 
 def parse_dt(text: str | None) -> datetime | None:
@@ -563,26 +574,39 @@ def build_abstract_cn(paper: Paper) -> str:
     return f"这段摘要主要在说：作者{action}，研究对象是{focus}{company_text}；摘要里最值得先关注的是{result}。"
 
 
-def build_overview_cn(paper: Paper) -> str:
-    focus = focus_terms_cn(paper)
-    company_text = company_suffix_cn(paper)
-    text = strip_html(paper.summary)
-    flow = infer_body_flow_cn(f"{paper.title} {text}")
-    result = infer_result_cn(f"{paper.title} {text}")
-    if not text:
-        return f"从标题推测，正文大概率会先交代{focus}{company_text}相关背景，再展开{flow}，最后落到{result}与应用意义。"
-    return f"如果按正文展开来看，这篇文章大概率会先说明{focus}{company_text}的研究背景与问题设置，再依次介绍{flow}，最后用{result}来支撑其结论与应用价值。"
+def build_keyword_extract(paper: Paper) -> str:
+    picks = []
+    seen = set()
+    for item in paper.highlights or []:
+        norm = str(item).strip()
+        if norm and norm.lower() not in seen:
+            seen.add(norm.lower())
+            picks.append(norm)
+    combined = ((paper.title or '') + ' ' + (paper.summary or '')).lower()
+    extra_terms = [
+        ('CMOS', ['cmos']),
+        ('MOSFET', ['mosfet', 'mosfets']),
+        ('FinFET', ['finfet', 'finfets']),
+        ('CFET', ['cfet', 'cfets']),
+        ('GAA', ['gate-all-around', 'gate all around', 'gaa']),
+        ('FDSOI', ['fdsoi']),
+        ('Graphene', ['graphene']),
+        ('Quantum dot', ['quantum dot', 'quantum dots']),
+        ('GaN', ['gan']),
+        ('SiC', ['sic']),
+        ('Gallium oxide', ['ga2o3', 'gallium oxide']),
+        ('Perovskite', ['perovskite', 'perovskites']),
+        ('2D semiconductor', ['2d semiconductor', '2d semiconductors']),
+        ('Heterostructure', ['heterostructure', 'heterostructures']),
+        ('Thermal interface', ['thermal interface', 'thermal interfaces']),
+        ('Spintronic device', ['spintronic', 'spin-torque', 'magnetic tunnel junction', 'mtj']),
+    ]
+    for label, terms in extra_terms:
+        if any(term in combined for term in terms) and label.lower() not in seen:
+            seen.add(label.lower())
+            picks.append(label)
+    return '；'.join(picks[:6]) if picks else '微电子器件；半导体材料'
 
-
-def sibling_url(base_url: str, filename: str) -> str:
-    parts = urlsplit(base_url)
-    path = parts.path or "/"
-    if path.endswith("/"):
-        new_path = path + filename
-    else:
-        idx = path.rfind("/")
-        new_path = (path[: idx + 1] if idx >= 0 else "/") + filename
-    return urlunsplit((parts.scheme, parts.netloc, new_path, parts.query, parts.fragment))
 
 
 def render_error_html(errors: list[str]) -> str:
@@ -602,7 +626,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in keywords) if keywords else "—"
         abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
         abstract_cn = escape(item.abstract_cn or "—")
-        overview = escape(item.overview_cn or "—")
+        overview = escape(item.keyword_extract or "—")
         title = escape(item.title)
         link = escape(item.url)
         payload = {
@@ -615,7 +639,9 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             "highlights": keywords,
             "summary": item.summary or "（该来源未提供 abstract / summary）",
             "abstract_cn": item.abstract_cn or "—",
-            "overview_cn": item.overview_cn or "—",
+            "abstract_zh": item.abstract_cn or "—",
+            "overview_cn": item.keyword_extract or "—",
+            "keyword_extract": item.keyword_extract or "—",
         }
         row_payloads.append(payload)
         rows.append(
@@ -678,8 +704,8 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
           <div class="fav-authors">作者：${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
           <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
-          <div class="fav-section"><strong>中文摘要概括</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
-          <div class="fav-section"><strong>正文概括</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract 中文翻译</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
+          <div class="fav-section"><strong>关键词提取</strong><p>${escapeHtml(paper.keyword_extract || paper.overview_cn || '—')}</p></div>
         </article>`;
     }
     function renderFavorites() {
@@ -845,8 +871,8 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             <th>作者</th>
             <th>关键词</th>
             <th>Abstract 原文</th>
-            <th>中文摘要概括</th>
-            <th>正文概括（基于标题/摘要）</th>
+            <th>Abstract 中文翻译</th>
+            <th>关键词提取</th>
           </tr>
         </thead>
         <tbody>
@@ -878,7 +904,9 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
             "highlights": item.highlights or [],
             "summary": item.summary or "（该来源未提供 abstract / summary）",
             "abstract_cn": item.abstract_cn or "—",
-            "overview_cn": item.overview_cn or "—",
+            "abstract_zh": item.abstract_cn or "—",
+            "overview_cn": item.keyword_extract or "—",
+            "keyword_extract": item.keyword_extract or "—",
         }
         cards.append(
             f"""
@@ -898,12 +926,12 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
                 <p>{escape(item.summary or '（该来源未提供 abstract / summary）')}</p>
               </section>
               <section>
-                <h3>中文摘要概括</h3>
+                <h3>Abstract 中文翻译</h3>
                 <p>{escape(item.abstract_cn or '—')}</p>
               </section>
               <section>
-                <h3>正文概括（基于标题/摘要）</h3>
-                <p>{escape(item.overview_cn or '—')}</p>
+                <h3>关键词提取</h3>
+                <p>{escape(item.keyword_extract or '—')}</p>
               </section>
             </article>
             """.strip()
@@ -1268,20 +1296,11 @@ def main() -> int:
         run_dt = datetime.now(UTC)
         for paper in selected:
             paper.abstract_cn = build_abstract_cn(paper)
-            paper.overview_cn = build_overview_cn(paper)
+            paper.keyword_extract = build_keyword_extract(paper)
         message = build_message(selected, errors, run_dt)
 
         for paper in unseen:
             seen_ids[paper.uid] = now_ts
-
-        save_state(
-            state_path,
-            {
-                "seen_ids": seen_ids,
-                "last_run_at": run_dt.isoformat(),
-                "last_selected_ids": [paper.uid for paper in selected],
-            },
-        )
 
         html_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1303,6 +1322,15 @@ def main() -> int:
         desktop_html_path.write_text(render_desktop_html(selected, errors, run_dt, mobile_url), encoding="utf-8")
         mobile_html_path.write_text(render_mobile_html(selected, errors, run_dt, desktop_url), encoding="utf-8")
         json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        save_state(
+            state_path,
+            {
+                "seen_ids": seen_ids,
+                "last_run_at": run_dt.isoformat(),
+                "last_selected_ids": [paper.uid for paper in selected],
+            },
+        )
 
         print(json.dumps(payload, ensure_ascii=False))
         return 0
