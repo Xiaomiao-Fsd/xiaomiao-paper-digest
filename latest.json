@@ -2,11 +2,101 @@
   "ok": true,
   "new_count": 0,
   "selected_count": 0,
-  "message": "论文晨报｜微电子材料 / 晶体管（2026-04-19）\n来源：arXiv / Science Advances / Nature Electronics / Nature Materials\n今天暂时没刷到新的高相关论文。",
-  "papers": [],
+  "message": "论文晨报｜微电子材料 / 晶体管（2026-04-17）\n来源：arXiv / Science Advances / Nature Electronics / Nature Materials\n今天暂时没刷到新的高相关论文。\n以下继续展示近7天内仍在窗口中的论文。",
+  "papers": [
+    {
+      "source": "arXiv",
+      "uid": "arxiv:2604.12366v1",
+      "title": "A CMOS-compatible, scalable and compact magnetoelectric spin-torque microwave detector",
+      "url": "https://arxiv.org/abs/2604.12366v1",
+      "published": "2026-04-14",
+      "authors": [
+        "Shuhui Liu",
+        "Riccardo Tomasello",
+        "Bin Fang",
+        "Aitian Chen",
+        "Like Zhang",
+        "Zhenhao Liu",
+        "Rui Hu",
+        "Wenkui Lin",
+        "Mario Carpentieri",
+        "Baoshun Zhang",
+        "Xixiang Zhang",
+        "Giovanni Finocchio",
+        "Zhongming Zeng"
+      ],
+      "summary": "The development of compact and highly sensitive microwave detectors compatible with complementary-metal-oxide-semiconductor (CMOS) processes is an active research area but remains a major challenge in microwave technology.",
+      "score": 7,
+      "priority": 1,
+      "highlights": [
+        "CMOS"
+      ],
+      "abstract_cn": "该摘要主要介绍了一种兼容 CMOS 工艺、可扩展且紧凑的磁电自旋转矩微波探测器。",
+      "keyword_extract": "CMOS；spin-torque microwave detector；magnetoelectric；magnetic tunnel junction"
+    },
+    {
+      "source": "arXiv",
+      "uid": "arxiv:2604.13445v1",
+      "title": "Sub-nm range momentum-dependent exciton transfer from a 2D semiconductor to graphene",
+      "url": "https://arxiv.org/abs/2604.13445v1",
+      "published": "2026-04-15",
+      "authors": [
+        "Aditi Raman Moghe",
+        "Delphine Lagarde",
+        "Sotirios Papadopoulos",
+        "Etienne Lorchat"
+      ],
+      "summary": "Van der Waals heterostructures made from atomically thin transition metal dichalcogenides and graphene are studied for interfacial charge and energy transfer.",
+      "score": 5,
+      "priority": 0,
+      "highlights": [
+        "semiconductor"
+      ],
+      "abstract_cn": "该摘要主要研究二维半导体与石墨烯异质结构中的激子转移行为。",
+      "keyword_extract": "2D semiconductor；graphene；heterostructure；exciton transfer"
+    },
+    {
+      "source": "arXiv",
+      "uid": "arxiv:2604.12539v1",
+      "title": "Thermal Characterization of Buried Interfaces in Multilayer Heterostructures via TDTR with Periodic Waveform Analysis",
+      "url": "https://arxiv.org/abs/2604.12539v1",
+      "published": "2026-04-14",
+      "authors": [
+        "Mingzhen Zhang",
+        "Puqing Jiang",
+        "Ronggui Yang"
+      ],
+      "summary": "A frequency-tunable TDTR approach is used to characterize buried thermal interfaces in multilayer semiconductor heterostructures.",
+      "score": 5,
+      "priority": 0,
+      "highlights": [],
+      "abstract_cn": "该摘要主要介绍了一种用于多层异质结构埋藏界面热学表征的周期波形分析 TDTR 方法。",
+      "keyword_extract": "thermal interface；heterostructure；TDTR；GaN；SiC；gallium oxide"
+    },
+    {
+      "source": "arXiv",
+      "uid": "arxiv:2604.13662v1",
+      "title": "Automatic Charge State Tuning of 300 mm FDSOI Quantum Dots Using Neural Network Segmentation of Charge Stability Diagram",
+      "url": "https://arxiv.org/abs/2604.13662v1",
+      "published": "2026-04-15",
+      "authors": [
+        "Peter Samaha",
+        "Amine Torki",
+        "Ysaline Renaud"
+      ],
+      "summary": "A deep-learning-driven semantic segmentation pipeline is proposed for automatic charge-state tuning of silicon quantum dots on 300 mm FDSOI devices.",
+      "score": 4,
+      "priority": 0,
+      "highlights": [],
+      "abstract_cn": "该摘要主要介绍了一种基于神经网络分割的 300 mm FDSOI 量子点电荷态自动调谐方法。",
+      "keyword_extract": "FDSOI；quantum dot；neural network；charge state tuning；silicon"
+    }
+  ],
   "errors": [],
   "report_url": "/paper_digest/index.html",
   "report_url_pc": "/paper_digest/desktop.html",
   "report_url_mobile": "/paper_digest/mobile.html",
-  "generated_at": "2026-04-19T00:30:56.700101+00:00"
+  "generated_at": "2026-04-16T18:20:32.062680+00:00",
+  "window_days": 7,
+  "today_new_ids": []
 }
