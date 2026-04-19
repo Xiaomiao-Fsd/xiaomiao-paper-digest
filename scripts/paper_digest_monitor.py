@@ -19,6 +19,8 @@ import requests
 UTC = timezone.utc
 CN_TZ = ZoneInfo("Asia/Shanghai")
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36"
+DAILY_PUBLISH_HOUR = 8
+DAILY_PUBLISH_MINUTE = 30
 
 ARXIV_QUERY = "((all:\"integrated circuit\" OR all:microelectronic OR all:microelectronics OR all:semiconductor OR all:\"semiconductor device\" OR all:wafer OR all:interconnect OR all:dielectric OR all:ferroelectric OR all:epitaxy OR all:transistor OR all:mosfet OR all:finfet OR all:cfet OR all:cmos OR all:\"gate-all-around\" OR all:nanosheet OR all:Intel OR all:TSMC) AND (cat:physics.app-ph OR cat:cond-mat.mtrl-sci OR cat:cond-mat.mes-hall OR cat:eess.EE OR cat:cond-mat.other))"
 SCI_ADV_ISSN = "2375-2548"
@@ -616,7 +618,7 @@ def render_error_html(errors: list[str]) -> str:
 
 
 def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime, mobile_url: str, ok: bool = True, status_message: str | None = None) -> str:
-    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    date_label = effective_publish_dt(run_dt).astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
     status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
     row_payloads = []
     rows = []
@@ -888,7 +890,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
 
 
 def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, desktop_url: str, ok: bool = True, status_message: str | None = None) -> str:
-    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    date_label = effective_publish_dt(run_dt).astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
     status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
     cards = []
     for idx, item in enumerate(items, 1):
@@ -1207,8 +1209,20 @@ def rank_and_filter(papers: list[Paper]) -> list[Paper]:
     return out
 
 
+def effective_publish_dt(run_dt: datetime) -> datetime:
+    local_dt = run_dt.astimezone(CN_TZ)
+    publish_local = local_dt.replace(
+        hour=DAILY_PUBLISH_HOUR,
+        minute=DAILY_PUBLISH_MINUTE,
+        second=0,
+        microsecond=0,
+    )
+    return publish_local.astimezone(UTC)
+
+
 def build_message(items: list[Paper], errors: list[str], run_dt: datetime) -> str:
-    header = f"论文晨报｜微电子材料 / 晶体管（{run_dt.astimezone(CN_TZ).strftime('%Y-%m-%d')}）"
+    display_dt = effective_publish_dt(run_dt)
+    header = f"论文晨报｜微电子材料 / 晶体管（{display_dt.astimezone(CN_TZ).strftime('%Y-%m-%d')}）"
     checked = "来源：arXiv / Science Advances / Nature Electronics / Nature Materials"
     if not items:
         lines = [header, checked, "今天暂时没刷到新的高相关论文。"]
@@ -1257,7 +1271,7 @@ def main() -> int:
             "report_url": args.web_url,
             "report_url_pc": desktop_url,
             "report_url_mobile": mobile_url,
-            "generated_at": run_dt.isoformat(),
+            "generated_at": effective_publish_dt(run_dt).isoformat(),
         }
         html_path.parent.mkdir(parents=True, exist_ok=True)
         json_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1315,7 +1329,7 @@ def main() -> int:
             "report_url": args.web_url,
             "report_url_pc": desktop_url,
             "report_url_mobile": mobile_url,
-            "generated_at": run_dt.isoformat(),
+            "generated_at": effective_publish_dt(run_dt).isoformat(),
         }
 
         html_path.write_text(render_index_html(desktop_url, mobile_url), encoding="utf-8")
