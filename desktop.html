@@ -298,9 +298,8 @@
         if (data.ok === false && body) {
           body.insertAdjacentHTML('beforebegin', `<div class="note warning">${escapeHtml(data.message || 'Digest generation failed.')}</div>`);
         }
-        syncButtons();
         renderFavorites();
-        attachFavoriteButtons();
+        bindTableButtons();
       } catch (err) {
         const body = document.getElementById('papers-body');
         const msg = err && err.message ? err.message : String(err);
