@@ -5,36 +5,145 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>微电子论文晨报｜手机版</title>
   <style>
-    :root { color-scheme: dark; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; }
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#121933; --panel2:#0f1730; --panel3:#18203a; --border:#243054; --text:#eef3ff; --soft:#a9b6d3; --link:#8bc4ff; --pill:#22305a; --accent:#6c4ad3; --warnbg:#3a2318; --warntext:#ffd4b5; }
+    :root[data-theme='light'] { color-scheme: light; --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8faff; --panel3:#eef3ff; --border:#d7e0f3; --text:#1f2a44; --soft:#5c6b89; --link:#295fd6; --pill:#e7eeff; --accent:#5a48d6; --warnbg:#fff2e8; --warntext:#9a4d16; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     .shell { padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }
     h1 { font-size: 24px; margin: 0 0 6px; }
-    .sub { color: #a9b6d3; margin-bottom: 12px; font-size: 14px; }
-    .nav a { display: inline-block; color: #dce6ff; text-decoration: none; background: #1e2a50; padding: 8px 12px; border-radius: 999px; margin-bottom: 14px; }
-    .meta, .note { background: #121933; border: 1px solid #243054; border-radius: 14px; padding: 12px; margin-bottom: 12px; }
-    .warning { background: #3a2318; color: #ffd4b5; }
-    .card { background: #121933; border: 1px solid #243054; border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.18); }
-    .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }
-    .index { font-weight: 700; color: #7cc2ff; }
-    h2 { font-size: 18px; line-height: 1.45; margin: 0 0 10px; }
-    h2 a { color: #eef3ff; text-decoration: none; }
-    h3 { margin: 14px 0 6px; font-size: 15px; color: #8bc4ff; }
-    p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: #e4ebff; font-size: 14px; }
-    .authors { color: #b7c6e6; font-size: 13px; margin-bottom: 10px; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22305a; margin: 0 6px 6px 0; font-size: 12px; }
-    .muted { color: #b7c6e6; }
-    .hint { color: #8fa1c9; font-size: 12px; margin-top: 8px; line-height: 1.6; }
+    h2 { font-size: 20px; margin: 0 0 10px; }
+    .sub { color: var(--soft); margin-bottom: 12px; font-size: 14px; }
+    .top-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+    .nav a, .theme-btn { display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }
+    .note { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+    .warning { background: var(--warnbg); color: var(--warntext); }
+    .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+    .favorites-sub { color: var(--soft); font-size: 13px; margin: 0 0 10px; }
+    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--soft); font-size: 13px; margin-bottom: 10px; }
+    .index { font-weight: 700; color: var(--link); }
+    h2 a, .fav-title a { color: var(--text); text-decoration: none; }
+    h2 { line-height: 1.45; margin: 0 0 10px; }
+    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--link); }
+    p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: var(--text); font-size: 14px; }
+    .authors, .fav-meta { color: var(--soft); font-size: 13px; margin-bottom: 10px; }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; font-size: 12px; }
+    .muted { color: var(--soft); }
+    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }
+    .fav-btn.active { background: var(--accent); color:#fff; }
   </style>
 </head>
 <body>
   <div class="shell">
     <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
-    <div class="sub">更新时间：2026-04-05 08:30（Asia/Shanghai）</div>
-    <div class="nav"><a href="desktop.html">切到PC版</a></div>
-    <div class="meta">来源：arXiv / Science Advances / Nature Electronics / Nature Materials<br>策略：先宽泛覆盖微电子 / IC，再过滤数字电路 / IC 设计，最后优先晶体管与材料</div>
+    <div class="sub">更新时间：2026-04-19 08:30（Asia/Shanghai）</div>
+    <div class="nav"><a href="/paper_digest/desktop.html">切到PC版</a></div>
+    <section class="favorites">
+      <h2>收藏夹</h2>
+      <p class="favorites-sub">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
+      <div id="favorites-list"></div>
+    </section>
+    
     
     <article class="card"><p>今天暂时没有命中的新论文。</p></article>
-    <div class="hint">说明：正文概括目前是基于标题与摘要自动生成，适合手机快速扫读。</div>
   </div>
+
+  <script>
+    const FAVORITES_KEY = 'paper_digest_favorites_v1';
+    const THEME_KEY = 'paper_digest_theme_v1';
+    function loadFavorites() {
+      try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
+    }
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        theme = 'dark';
+      }
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      localStorage.setItem(THEME_KEY, theme);
+    }
+    function saveFavorites(items) {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
+    }
+    function escapeHtml(text) {
+      return String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function favCardHtml(paper) {
+      const authors = (paper.authors || []).join(', ') || '—';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">无高亮关键词</span>';
+      return `
+      <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
+        <div class="fav-top">
+          <div>
+            <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
+            <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
+          </div>
+          <button class="remove-fav" type="button">移出</button>
+        </div>
+        <div class="authors">作者：${escapeHtml(authors)}</div>
+        <div class="keywords">${kws}</div>
+      </article>`;
+    }
+    function renderFavorites() {
+      const wrap = document.getElementById('favorites-list');
+      const items = loadFavorites();
+      if (!items.length) {
+        wrap.innerHTML = '<article class="fav-card"><p>还没有收藏的论文。看到喜欢的就点“收藏”。</p></article>';
+        return;
+      }
+      wrap.innerHTML = items.map(favCardHtml).join('');
+      wrap.querySelectorAll('.remove-fav').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const uid = btn.closest('.fav-card')?.dataset?.uid;
+          const next = loadFavorites().filter(item => item.uid !== uid);
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+    }
+    function syncButtons() {
+      const ids = new Set(loadFavorites().map(item => item.uid));
+      document.querySelectorAll('.card[data-paper]').forEach(card => {
+        const btn = card.querySelector('.fav-btn');
+        if (!btn) return;
+        const paper = JSON.parse(card.dataset.paper);
+        const active = ids.has(paper.uid);
+        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
+        btn.classList.toggle('active', active);
+      });
+    }
+    function bindButtons() {
+      document.querySelectorAll('.card[data-paper]').forEach(card => {
+        const btn = card.querySelector('.fav-btn');
+        if (!btn || btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          const paper = JSON.parse(card.dataset.paper);
+          const items = loadFavorites();
+          const exists = items.some(item => item.uid === paper.uid);
+          const next = exists ? items.filter(item => item.uid !== paper.uid) : [paper, ...items];
+          saveFavorites(next);
+          renderFavorites();
+          syncButtons();
+        });
+      });
+      syncButtons();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+      renderFavorites();
+      bindButtons();
+    });
+  </script>
+    
 </body>
 </html>
