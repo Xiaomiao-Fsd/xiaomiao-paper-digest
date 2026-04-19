@@ -146,14 +146,14 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>收藏</th>
+            <th>Save</th>
             <th>Source</th>
             <th>Published</th>
             <th>Paper Title / Link</th>
             <th>Authors</th>
             <th>Keywords</th>
             <th>Abstract (Original)</th>
-            <th>Abstract 中文翻译</th>
+            <th>Abstract Translation (ZH)</th>
             <th>正文概括（基于标题/摘要）</th>
           </tr>
         </thead>
@@ -269,7 +269,7 @@
         const overview = escapeHtml(paper.overview_cn || paper.keyword_extract || '—');
         return `<tr data-paper='${payload}'>
           <td>${idx + 1}</td>
-          <td><button class="fav-btn" type="button">☆ 收藏</button></td>
+          <td><button class="fav-btn" type="button">☆ Save</button></td>
           <td>${escapeHtml(paper.source || '—')}</td>
           <td>${escapeHtml(paper.published || '—')}</td>
           <td><a href="${escapeHtml(paper.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title || 'Untitled')}</a></td>

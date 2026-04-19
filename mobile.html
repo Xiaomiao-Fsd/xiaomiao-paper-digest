@@ -227,13 +227,13 @@
       return `<article class="card" data-paper='${payload}' data-uid="${escapeHtml(paper.uid || '')}">
         <div class="card-head">
           <div><div class="index">#${idx + 1}</div><div class="meta-line">${escapeHtml(paper.source || '—')} · ${escapeHtml(paper.published || '—')}</div></div>
-          <button class="fav-btn" type="button">☆ 收藏</button>
+          <button class="fav-btn" type="button">☆ Save</button>
         </div>
         <h2><a href="${escapeHtml(paper.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title || 'Untitled')}</a></h2>
-        <div class="authors">作者：${escapeHtml((paper.authors || []).join(', ') || '—')}</div>
+        <div class="authors">Authors: ${escapeHtml((paper.authors || []).join(', ') || '—')}</div>
         <div class="keywords">${renderKeywords(paper.highlights)}</div>
-        <section><h3>Abstract 原文</h3><p>${escapeHtml(paper.summary || '（该来源未提供 abstract / summary）')}</p></section>
-        <section><h3>Abstract 中文翻译</h3><p>${escapeHtml(paper.abstract_cn || '—')}</p></section>
+        <section><h3>Abstract (Full)</h3><p>${escapeHtml(paper.summary || '（该来源未提供 abstract / summary）')}</p></section>
+        <section><h3>Abstract Translation (ZH)</h3><p>${escapeHtml(paper.abstract_cn || '—')}</p></section>
         <section><h3>正文概括（基于标题/摘要）</h3><p>${escapeHtml(paper.overview_cn || '—')}</p></section>
       </article>`;
     }
