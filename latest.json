@@ -2,11 +2,13 @@
   "ok": true,
   "new_count": 0,
   "selected_count": 0,
-  "message": "论文晨报｜微电子材料 / 晶体管（2026-04-19）\n来源：arXiv / Science Advances / Nature Electronics / Nature Materials\n今天暂时没刷到新的高相关论文。",
+  "message": "论文晨报｜微电子材料 / 晶体管（2026-04-17）\n来源：arXiv / Science Advances / Nature Electronics / Nature Materials\n今天暂时没刷到新的高相关论文。\n抓取异常：arXiv",
   "papers": [],
-  "errors": [],
+  "errors": [
+    "arXiv"
+  ],
   "report_url": "/paper_digest/index.html",
   "report_url_pc": "/paper_digest/desktop.html",
   "report_url_mobile": "/paper_digest/mobile.html",
-  "generated_at": "2026-04-19T00:30:56.700101+00:00"
+  "generated_at": "2026-04-16T18:20:32.062680+00:00"
 }
