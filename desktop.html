@@ -301,7 +301,8 @@
         bindButtons();
       } catch (err) {
         const body = document.getElementById('papers-body');
-        if (body) body.innerHTML = '<tr><td colspan="10">Failed to load latest.json.</td></tr>';
+        const msg = err && err.message ? err.message : String(err);
+        if (body) body.innerHTML = `<tr><td colspan="10">Failed to load latest.json. ${escapeHtml(msg)}</td></tr>`;
       }
     }
 
