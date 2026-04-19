@@ -260,12 +260,13 @@
         const payload = escapeHtml(JSON.stringify({
           uid: paper.uid, source: paper.source, published: paper.published, title: paper.title, url: paper.url,
           authors: paper.authors || [], highlights: paper.highlights || [], summary: paper.summary || '—',
-          abstract_cn: paper.abstract_cn || '—', overview_cn: paper.overview_cn || '—'
+          abstract_cn: paper.abstract_cn || '—', overview_cn: (paper.overview_cn || paper.keyword_extract || '—'),
+          keyword_extract: paper.keyword_extract || paper.overview_cn || '—'
         }));
         const authors = escapeHtml((paper.authors || []).join(', ') || '—');
         const summary = escapeHtml(paper.summary || '（该来源未提供 abstract / summary）');
         const abstractCn = escapeHtml(paper.abstract_cn || '—');
-        const overview = escapeHtml(paper.overview_cn || '—');
+        const overview = escapeHtml(paper.overview_cn || paper.keyword_extract || '—');
         return `<tr data-paper='${payload}'>
           <td>${idx + 1}</td>
           <td><button class="fav-btn" type="button">☆ 收藏</button></td>
@@ -329,7 +330,7 @@
           <div class="fav-kws">${kws}</div>
           <div class="fav-section"><strong>Abstract (Original)</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
           <div class="fav-section"><strong>Chinese Summary</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
-          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.overview_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.overview_cn || paper.keyword_extract || '—')}</p></div>
         </article>`;
     }
     function renderFavorites() {
