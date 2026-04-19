@@ -1,276 +1,69 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="icon" type="image/jpeg" href="assets/preview.jpg" />
-  <link rel="apple-touch-icon" href="assets/preview.jpg" />
-  <meta property="og:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <title>Morning Paper Digest for Microelectronics｜Xiaomiao</title>
-  <script>
-    (function () {
-      var THEME_KEY = 'paper_digest_theme_v1';
-      var storedTheme = null;
-      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
-      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme;
-    })();
-  </script>
+  <title>微电子论文晨报｜手机版</title>
   <style>
-    :root {
-      color-scheme: light;
-      --bg: #f4f7fb;
-      --text: #142033;
-      --sub: #5f6f87;
-      --nav-bg: #dbe7fb;
-      --nav-text: #17356f;
-      --panel: #ffffff;
-      --border: #d6e0f0;
-      --panel-shadow: 0 8px 24px rgba(17, 43, 88, .08);
-      --link: #1d63d6;
-      --heading-accent: #1d63d6;
-      --kw-bg: #e5edfb;
-      --btn-bg: #dbe7fb;
-      --btn-text: #17356f;
-      --btn-active: #6c4ad3;
-      --btn-active-text: #ffffff;
-      --warning-bg: #fff1e6;
-      --warning-text: #8a4a16;
-    }
-    :root[data-theme='dark'] {
-      color-scheme: dark;
-      --bg: #0b1020;
-      --text: #eef3ff;
-      --sub: #a9b6d3;
-      --nav-bg: #1e2a50;
-      --nav-text: #dce6ff;
-      --panel: #121933;
-      --border: #243054;
-      --panel-shadow: 0 8px 24px rgba(0,0,0,.18);
-      --link: #8bc4ff;
-      --heading-accent: #8bc4ff;
-      --kw-bg: #22305a;
-      --btn-bg: #22305a;
-      --btn-text: #eef3ff;
-      --btn-active: #6c4ad3;
-      --btn-active-text: #eef3ff;
-      --warning-bg: #3a2318;
-      --warning-text: #ffd4b5;
-    }
+    :root { color-scheme: dark; --bg:#0b1020; --panel:#121933; --panel2:#0f1730; --panel3:#18203a; --border:#243054; --text:#eef3ff; --soft:#a9b6d3; --link:#8bc4ff; --pill:#22305a; --accent:#6c4ad3; --warnbg:#3a2318; --warntext:#ffd4b5; }
+    :root[data-theme='light'] { color-scheme: light; --bg:#f5f7fb; --panel:#ffffff; --panel2:#f8faff; --panel3:#eef3ff; --border:#d7e0f3; --text:#1f2a44; --soft:#5c6b89; --link:#295fd6; --pill:#e7eeff; --accent:#5a48d6; --warnbg:#fff2e8; --warntext:#9a4d16; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
     .shell { padding: 16px 14px 28px; max-width: 900px; margin: 0 auto; }
     h1 { font-size: 24px; margin: 0 0 6px; }
     h2 { font-size: 20px; margin: 0 0 10px; }
-    .sub { color: var(--sub); margin-bottom: 12px; font-size: 14px; }
-    .top-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-    .nav { margin-left: -2px; }
-    .nav a { display: inline-block; color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
-    .theme-toggle { --toggle-duration: .75s; --toggle-x: 0px; position: relative; display: inline-flex; align-items: center; justify-content: center; width: 84px; height: 40px; min-width: 84px; border: 0; padding: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; overflow: visible; }
-    .theme-toggle-track { position: relative; display: block; width: 84px; height: 40px; border-radius: 999px; overflow: hidden; background: linear-gradient(180deg, #dfeaf8 0%, #bdd3f0 100%); box-shadow: inset 0 0 0 1px rgba(130,153,188,.35), 0 1px 2px rgba(14,30,66,.08); transition: background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-track::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,0)); }
-    .theme-toggle-sky { position: absolute; border-radius: 50%; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-sky-day { width: 18px; height: 18px; left: 50px; top: 18px; background: rgba(255,255,255,.35); opacity: 1; }
-    .theme-toggle-sky-night { width: 14px; height: 14px; right: 16px; top: 11px; background: #eef2ff; box-shadow: -4px 0 0 1px rgba(17,24,39,.18) inset; opacity: 0; transform: translateY(2px) scale(.92); }
-    .theme-toggle-stars { position: absolute; inset: 0; opacity: 0; transition: opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-stars::before { content: ''; position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.82); right: 36px; top: 11px; box-shadow: -10px 8px 0 rgba(255,255,255,.55), -18px 17px 0 rgba(255,255,255,.4), 8px 14px 0 rgba(255,255,255,.45); }
-    .theme-toggle-thumb { position: absolute; top: 4px; left: 4px; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(180deg, #ffd978 0%, #f6b73c 100%); box-shadow: 0 2px 8px rgba(108,85,24,.26), inset 0 -2px 3px rgba(180,120,10,.18); transform: translate3d(var(--toggle-x), 0, 0); will-change: transform, background, box-shadow; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); z-index: 2; }
-    .theme-toggle[data-theme='dark'] .theme-toggle-track { background: linear-gradient(180deg, #1d2745 0%, #11182d 100%); box-shadow: inset 0 0 0 1px rgba(116,137,188,.2), 0 1px 2px rgba(0,0,0,.24); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-thumb { background: linear-gradient(180deg, #eef2ff 0%, #c9d2ec 100%); box-shadow: 0 2px 8px rgba(5,8,16,.34), inset 0 -2px 3px rgba(120,130,160,.2); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-sky-day { opacity: .18; transform: scale(.92); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-sky-night { opacity: 1; transform: translateY(0) scale(1); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-stars { opacity: 1; }
-    .theme-toggle:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
-    .theme-animating, .theme-animating *, .theme-animating *::before, .theme-animating *::after { transition: background-color .75s cubic-bezier(.22,.61,.36,1), color .75s cubic-bezier(.22,.61,.36,1), border-color .75s cubic-bezier(.22,.61,.36,1), box-shadow .75s cubic-bezier(.22,.61,.36,1), opacity .75s cubic-bezier(.22,.61,.36,1); }
+    .sub { color: var(--soft); margin-bottom: 12px; font-size: 14px; }
+    .top-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+    .nav a, .theme-btn { display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }
     .note { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
-    .warning { background: var(--warning-bg); color: var(--warning-text); }
+    .warning { background: var(--warnbg); color: var(--warntext); }
     .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
-    .favorites-sub { color: var(--sub); font-size: 13px; margin: 0 0 10px; }
-    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: var(--panel-shadow); }
-    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--sub); font-size: 13px; margin-bottom: 10px; }
+    .favorites-sub { color: var(--soft); font-size: 13px; margin: 0 0 10px; }
+    .fav-card, .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+    .fav-top, .card-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; color: var(--soft); font-size: 13px; margin-bottom: 10px; }
     .index { font-weight: 700; color: var(--link); }
     h2 a, .fav-title a { color: var(--text); text-decoration: none; }
     h2 { line-height: 1.45; margin: 0 0 10px; }
-    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--heading-accent); }
+    h3 { margin: 14px 0 6px; font-size: 15px; color: var(--link); }
     p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: var(--text); font-size: 14px; }
-    .authors, .fav-meta { color: var(--sub); font-size: 13px; margin-bottom: 10px; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--kw-bg); margin: 0 6px 6px 0; font-size: 12px; }
-    .muted { color: var(--sub); }
-    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--btn-bg); color: var(--btn-text); }
-    .fav-btn.active { background: var(--btn-active); color: var(--btn-active-text); }
+    .authors, .fav-meta { color: var(--soft); font-size: 13px; margin-bottom: 10px; }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; font-size: 12px; }
+    .muted { color: var(--soft); }
+    .fav-btn, .remove-fav { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }
+    .fav-btn.active { background: var(--accent); color:#fff; }
   </style>
 </head>
 <body>
   <div class="shell">
-    <h1>Morning Paper Digest for Microelectronics / IC · Mobile</h1>
-    <div class="sub" id="digest-updated">Updated: Loading…</div>
-    <div class="top-actions">
-      <div class="nav"><a href="desktop.html">Desktop view</a></div>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light and dark theme. Double-click quickly or right-click to follow the system setting.">
-        <span class="theme-toggle-track" aria-hidden="true">
-          <span class="theme-toggle-sky theme-toggle-sky-day"></span>
-          <span class="theme-toggle-sky theme-toggle-sky-night"></span>
-          <span class="theme-toggle-stars"></span>
-          <span class="theme-toggle-thumb"></span>
-        </span>
-      </button>
-    </div>
+    <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
+    <div class="sub">更新时间：2026-04-19 08:30（Asia/Shanghai）</div>
+    <div class="nav"><a href="/paper_digest/desktop.html">切到PC版</a></div>
     <section class="favorites">
-      <h2>Saved Papers</h2>
-      <p class="favorites-sub">Saved papers stay in this browser on this device, so you can revisit them later.</p>
+      <h2>收藏夹</h2>
+      <p class="favorites-sub">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
       <div id="favorites-list"></div>
     </section>
     
-    <article class="card"><p>Loading latest papers…</p></article>
+    
+    <article class="card"><p>今天暂时没有命中的新论文。</p></article>
   </div>
 
   <script>
     const FAVORITES_KEY = 'paper_digest_favorites_v1';
     const THEME_KEY = 'paper_digest_theme_v1';
-    const themeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    function getStoredTheme() {
-      try { return localStorage.getItem(THEME_KEY); } catch { return null; }
-    }
-    function getPreferredTheme() {
-      const stored = getStoredTheme();
-      if (stored === 'light' || stored === 'dark') return stored;
-      return themeQuery && themeQuery.matches ? 'dark' : 'light';
-    }
-    function applyTheme(theme, options = {}) {
-      const shouldAnimate = options.animate !== false;
-      if (shouldAnimate) document.documentElement.classList.add('theme-animating');
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme;
-      if (shouldAnimate) {
-        clearTimeout(window.__themeAnimTimer);
-        window.__themeAnimTimer = setTimeout(() => {
-          document.documentElement.classList.remove('theme-animating');
-        }, 750);
-      }
-    }
-    function updateThemeToggle(theme = null, options = {}) {
-      const btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      const stored = getStoredTheme();
-      const current = theme || document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      const nextX = current === 'dark' ? 44 : 0;
-      const thumb = btn.querySelector('.theme-toggle-thumb');
-      const prevX = Number(btn.dataset.x || (document.documentElement.getAttribute('data-theme') === 'dark' ? 44 : 0));
-      btn.dataset.theme = current;
-      btn.dataset.mode = stored ? 'manual' : 'system';
-      btn.dataset.x = String(nextX);
-      btn.style.setProperty('--toggle-x', `${nextX}px`);
-      if (thumb && options.animate && thumb.animate) {
-        try {
-          if (btn.__thumbAnim) btn.__thumbAnim.cancel();
-          btn.__thumbAnim = thumb.animate(
-            [
-              { transform: `translate3d(${prevX}px, 0, 0)` },
-              { transform: `translate3d(${nextX}px, 0, 0)` }
-            ],
-            {
-              duration: 750,
-              easing: 'cubic-bezier(.22,.61,.36,1)',
-              fill: 'forwards'
-            }
-          );
-        } catch {}
-      }
-      const modeLabel = stored ? `Manual ${current} mode` : `Following system (${current})`;
-      btn.setAttribute('aria-label', `Theme toggle. ${modeLabel}. Click to switch. Double-click quickly or right-click to follow the system setting.`);
-      btn.title = stored
-        ? 'Manual theme mode. Click to switch between light and dark. Double-click quickly or right-click to follow the system setting.'
-        : 'Currently following the system theme. Click to switch manually.';
-    }
-    function setThemePreference(next) {
-      const targetTheme = next === null ? getPreferredTheme() : next;
-      const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      if (next === null) {
-        try { localStorage.removeItem(THEME_KEY); } catch {}
-      } else {
-        try { localStorage.setItem(THEME_KEY, next); } catch {}
-      }
-      if (targetTheme === currentTheme) {
-        applyTheme(targetTheme, { animate: false });
-        updateThemeToggle(targetTheme, { animate: false });
-        return;
-      }
-      updateThemeToggle(targetTheme, { animate: true });
-      requestAnimationFrame(() => {
-        applyTheme(targetTheme);
-      });
-    }
-    function cycleThemePreference() {
-      const stored = getStoredTheme();
-      const current = stored || getPreferredTheme();
-      const next = current === 'dark' ? 'light' : 'dark';
-      setThemePreference(next);
-    }
-
-    function escapeHtml(text) {
-      return String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    }
-    function renderKeywords(tags) {
-      if (!tags || !tags.length) return '<span class="kw muted">No highlighted keywords</span>';
-      return tags.map(tag => `<span class="kw">${escapeHtml(tag)}</span>`).join('');
-    }
-    function cardHtml(paper, idx) {
-      const payload = escapeHtml(JSON.stringify({
-        uid: paper.uid, source: paper.source, published: paper.published, title: paper.title, url: paper.url,
-        authors: paper.authors || [], highlights: paper.highlights || [], summary: paper.summary || '—',
-        abstract_cn: paper.abstract_cn || '—', overview_cn: paper.overview_cn || '—'
-      }));
-      return `<article class="card" data-paper='${payload}' data-uid="${escapeHtml(paper.uid || '')}">
-        <div class="card-head">
-          <div><div class="index">#${idx + 1}</div><div class="meta-line">${escapeHtml(paper.source || '—')} · ${escapeHtml(paper.published || '—')}</div></div>
-          <button class="fav-btn" type="button">☆ 收藏</button>
-        </div>
-        <h2><a href="${escapeHtml(paper.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title || 'Untitled')}</a></h2>
-        <div class="authors">作者：${escapeHtml((paper.authors || []).join(', ') || '—')}</div>
-        <div class="keywords">${renderKeywords(paper.highlights)}</div>
-        <section><h3>Abstract 原文</h3><p>${escapeHtml(paper.summary || '（该来源未提供 abstract / summary）')}</p></section>
-        <section><h3>Abstract 中文翻译</h3><p>${escapeHtml(paper.abstract_cn || '—')}</p></section>
-        <section><h3>正文概括（基于标题/摘要）</h3><p>${escapeHtml(paper.overview_cn || '—')}</p></section>
-      </article>`;
-    }
-    async function hydrateMobileDigest() {
-      try {
-        const res = await fetch('latest.json', { cache: 'no-store' });
-        const data = await res.json();
-        const updatedEl = document.getElementById('digest-updated');
-        if (updatedEl) {
-          const dt = data.generated_at ? new Date(data.generated_at) : null;
-          const label = dt && !Number.isNaN(dt.getTime())
-            ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' }).format(dt)
-            : 'Unknown';
-          updatedEl.textContent = `Updated: ${label} (Asia/Shanghai) · Coverage: last 7 days`;
-        }
-        const shell = document.querySelector('.shell');
-        if (!shell) return;
-        shell.querySelectorAll('article.card').forEach(el => el.remove());
-        if (data.ok === false) {
-          const warn = document.createElement('div');
-          warn.className = 'note warning';
-          warn.textContent = data.message || 'Digest generation failed.';
-          const fav = shell.querySelector('.favorites');
-          if (fav) fav.insertAdjacentElement('afterend', warn);
-        }
-        const papers = data.papers || [];
-        const html = papers.length ? papers.map(cardHtml).join('') : '<article class="card"><p>No matching new papers have been identified in the last 7 days yet.</p></article>';
-        shell.insertAdjacentHTML('beforeend', html);
-        bindButtons();
-      } catch (err) {
-        const shell = document.querySelector('.shell');
-        if (shell) shell.insertAdjacentHTML('beforeend', '<article class="card"><p>Failed to load latest.json.</p></article>');
-      }
-    }
-
     function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
+    }
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        theme = 'dark';
+      }
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
@@ -280,7 +73,7 @@
     }
     function favCardHtml(paper) {
       const authors = (paper.authors || []).join(', ') || '—';
-      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">No highlighted keywords</span>';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="kw muted">无高亮关键词</span>';
       return `
       <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
         <div class="fav-top">
@@ -288,9 +81,9 @@
             <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
             <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
           </div>
-          <button class="remove-fav" type="button">Remove</button>
+          <button class="remove-fav" type="button">移出</button>
         </div>
-        <div class="authors">Authors: ${escapeHtml(authors)}</div>
+        <div class="authors">作者：${escapeHtml(authors)}</div>
         <div class="keywords">${kws}</div>
       </article>`;
     }
@@ -298,7 +91,7 @@
       const wrap = document.getElementById('favorites-list');
       const items = loadFavorites();
       if (!items.length) {
-        wrap.innerHTML = '<article class="fav-card"><p>No saved papers yet. Use “Save” on any paper you want to keep.</p></article>';
+        wrap.innerHTML = '<article class="fav-card"><p>还没有收藏的论文。看到喜欢的就点“收藏”。</p></article>';
         return;
       }
       wrap.innerHTML = items.map(favCardHtml).join('');
@@ -319,7 +112,7 @@
         if (!btn) return;
         const paper = JSON.parse(card.dataset.paper);
         const active = ids.has(paper.uid);
-        btn.textContent = active ? '★ Saved' : '☆ Save';
+        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
         btn.classList.toggle('active', active);
       });
     }
@@ -341,42 +134,14 @@
       syncButtons();
     }
     document.addEventListener('DOMContentLoaded', () => {
-      applyTheme(getPreferredTheme(), { animate: false });
-      const toggle = document.getElementById('theme-toggle');
-      if (toggle) {
-        updateThemeToggle();
-        let clickTimer = null;
-        toggle.addEventListener('click', () => {
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            setThemePreference(null);
-            return;
-          }
-          clickTimer = setTimeout(() => {
-            clickTimer = null;
-            cycleThemePreference();
-          }, 180);
-        });
-        toggle.addEventListener('contextmenu', event => {
-          event.preventDefault();
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-          }
-          setThemePreference(null);
-        });
-      }
-      if (themeQuery && typeof themeQuery.addEventListener === 'function') {
-        themeQuery.addEventListener('change', () => {
-          if (!getStoredTheme()) {
-            applyTheme(getPreferredTheme(), { animate: false });
-            updateThemeToggle();
-          }
-        });
-      }
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
       renderFavorites();
-      hydrateMobileDigest();
+      bindButtons();
     });
   </script>
     

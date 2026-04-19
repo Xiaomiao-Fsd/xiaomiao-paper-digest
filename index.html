@@ -1,58 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/jpeg" href="assets/preview.jpg" />
-  <link rel="apple-touch-icon" href="assets/preview.jpg" />
-  <meta property="og:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <title>Morning Paper Digest for Microelectronics</title>
+  <title>微电子论文晨报</title>
   <script>
     (function () {
-      var THEME_KEY = 'paper_digest_theme_v1';
-      var storedTheme = null;
-      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
-      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme;
       var mobile = window.matchMedia && window.matchMedia('(max-width: 860px)').matches;
-      window.location.replace(mobile ? "mobile.html" : "desktop.html");
+      window.location.replace(mobile ? "/paper_digest/mobile.html" : "/paper_digest/desktop.html");
     })();
   </script>
   <style>
-    :root {
-      color-scheme: light;
-      --bg: #f4f7fb;
-      --text: #142033;
-      --card: #ffffff;
-      --border: #d6e0f0;
-      --link: #1d63d6;
-    }
-    :root[data-theme='dark'] {
-      color-scheme: dark;
-      --bg: #0b1020;
-      --text: #eef3ff;
-      --card: #121933;
-      --border: #243054;
-      --link: #8bc4ff;
-    }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: grid; place-items: center; min-height: 100vh; margin: 0; }
-    .box { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 24px; width: min(92vw, 520px); }
-    a { color: var(--link); }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b1020; color: #eef3ff; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+    .box { background: #121933; border: 1px solid #243054; border-radius: 18px; padding: 24px; width: min(92vw, 520px); }
+    a { color: #8bc4ff; }
   </style>
 </head>
 <body>
   <div class="box">
-    <h1>Morning Paper Digest for Microelectronics</h1>
-    <p>Redirecting you to the best version for your device.</p>
-    <p>If the redirect does not happen automatically, choose a version below:</p>
+    <h1>微电子论文晨报</h1>
+    <p>正在根据设备跳转到合适版本。</p>
+    <p>如果没有自动跳转，可以手动选择：</p>
     <ul>
-      <li><a href="desktop.html">Desktop</a></li>
-      <li><a href="mobile.html">Mobile</a></li>
+      <li><a href="/paper_digest/desktop.html">PC版</a></li>
+      <li><a href="/paper_digest/mobile.html">手机版</a></li>
     </ul>
   </div>
 </body>
