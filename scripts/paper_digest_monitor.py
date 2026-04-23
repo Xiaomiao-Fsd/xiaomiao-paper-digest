@@ -163,7 +163,7 @@ class Paper:
     priority: int = 0
     highlights: list[str] = field(default_factory=list)
     abstract_cn: str = ""
-    keyword_extract: str = ""
+    reading_notes: str = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -571,43 +571,14 @@ def build_abstract_cn(paper: Paper) -> str:
     company_text = company_suffix_cn(paper)
     action = infer_action_cn(f"{paper.title} {text}")
     result = infer_result_cn(f"{paper.title} {text}")
+    body_flow = infer_body_flow_cn(f"{paper.title} {text}")
     if not text:
         return f"该来源没有给出英文摘要；从标题看，论文主要围绕{focus}{company_text}展开，重点可能落在{result}。"
-    return f"这段摘要主要在说：作者{action}，研究对象是{focus}{company_text}；摘要里最值得先关注的是{result}。"
+    return f"本文主要围绕{focus}{company_text}展开。摘要显示，作者{action}，正文大概率会依次涉及{body_flow}等内容；若快速抓重点，可优先关注其中与{result}直接相关的部分。"
 
 
-def build_keyword_extract(paper: Paper) -> str:
-    picks = []
-    seen = set()
-    for item in paper.highlights or []:
-        norm = str(item).strip()
-        if norm and norm.lower() not in seen:
-            seen.add(norm.lower())
-            picks.append(norm)
-    combined = ((paper.title or '') + ' ' + (paper.summary or '')).lower()
-    extra_terms = [
-        ('CMOS', ['cmos']),
-        ('MOSFET', ['mosfet', 'mosfets']),
-        ('FinFET', ['finfet', 'finfets']),
-        ('CFET', ['cfet', 'cfets']),
-        ('GAA', ['gate-all-around', 'gate all around', 'gaa']),
-        ('FDSOI', ['fdsoi']),
-        ('Graphene', ['graphene']),
-        ('Quantum dot', ['quantum dot', 'quantum dots']),
-        ('GaN', ['gan']),
-        ('SiC', ['sic']),
-        ('Gallium oxide', ['ga2o3', 'gallium oxide']),
-        ('Perovskite', ['perovskite', 'perovskites']),
-        ('2D semiconductor', ['2d semiconductor', '2d semiconductors']),
-        ('Heterostructure', ['heterostructure', 'heterostructures']),
-        ('Thermal interface', ['thermal interface', 'thermal interfaces']),
-        ('Spintronic device', ['spintronic', 'spin-torque', 'magnetic tunnel junction', 'mtj']),
-    ]
-    for label, terms in extra_terms:
-        if any(term in combined for term in terms) and label.lower() not in seen:
-            seen.add(label.lower())
-            picks.append(label)
-    return '；'.join(picks[:6]) if picks else '微电子器件；半导体材料'
+def build_reading_notes(paper: Paper) -> str:
+    return build_abstract_cn(paper)
 
 
 
@@ -628,7 +599,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in keywords) if keywords else "—"
         abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
         abstract_cn = escape(item.abstract_cn or "—")
-        overview = escape(item.keyword_extract or "—")
+        overview = escape(item.reading_notes or "—")
         title = escape(item.title)
         link = escape(item.url)
         payload = {
@@ -642,8 +613,8 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             "summary": item.summary or "（该来源未提供 abstract / summary）",
             "abstract_cn": item.abstract_cn or "—",
             "abstract_zh": item.abstract_cn or "—",
-            "overview_cn": item.keyword_extract or "—",
-            "keyword_extract": item.keyword_extract or "—",
+            "overview_cn": item.reading_notes or "—",
+            "reading_notes": item.reading_notes or "—",
         }
         row_payloads.append(payload)
         rows.append(
@@ -664,7 +635,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         )
 
     if not rows:
-        rows.append('<tr><td colspan="10">今天暂时没有命中的新论文。</td></tr>')
+        rows.append('<tr><td colspan="10">No matching papers found today.</td></tr>')
 
     favorites_script = """
   <script>
@@ -707,7 +678,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
           <div class="fav-kws">${kws}</div>
           <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
           <div class="fav-section"><strong>Abstract 中文翻译</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
-          <div class="fav-section"><strong>关键词提取</strong><p>${escapeHtml(paper.keyword_extract || paper.overview_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
         </article>`;
     }
     function renderFavorites() {
@@ -874,7 +845,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             <th>关键词</th>
             <th>Abstract 原文</th>
             <th>Abstract 中文翻译</th>
-            <th>关键词提取</th>
+            <th>Reading Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -907,8 +878,8 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
             "summary": item.summary or "（该来源未提供 abstract / summary）",
             "abstract_cn": item.abstract_cn or "—",
             "abstract_zh": item.abstract_cn or "—",
-            "overview_cn": item.keyword_extract or "—",
-            "keyword_extract": item.keyword_extract or "—",
+            "overview_cn": item.reading_notes or "—",
+            "reading_notes": item.reading_notes or "—",
         }
         cards.append(
             f"""
@@ -932,8 +903,8 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
                 <p>{escape(item.abstract_cn or '—')}</p>
               </section>
               <section>
-                <h3>关键词提取</h3>
-                <p>{escape(item.keyword_extract or '—')}</p>
+                <h3>Reading Notes</h3>
+                <p>{escape(item.reading_notes or '—')}</p>
               </section>
             </article>
             """.strip()
@@ -1310,7 +1281,7 @@ def main() -> int:
         run_dt = datetime.now(UTC)
         for paper in selected:
             paper.abstract_cn = build_abstract_cn(paper)
-            paper.keyword_extract = build_keyword_extract(paper)
+            paper.reading_notes = build_reading_notes(paper)
         message = build_message(selected, errors, run_dt)
 
         for paper in unseen:
