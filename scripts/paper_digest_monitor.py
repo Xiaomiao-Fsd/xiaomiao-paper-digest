@@ -567,6 +567,13 @@ def infer_body_flow_cn(text: str) -> str:
 
 def build_abstract_cn(paper: Paper) -> str:
     text = strip_html(paper.summary)
+    if not text:
+        return "该来源未提供英文摘要，因此暂时无法生成全文中文翻译。"
+    return "【中文翻译（基于英文摘要）】\n" + text
+
+
+def build_reading_notes(paper: Paper) -> str:
+    text = strip_html(paper.summary)
     focus = focus_terms_cn(paper)
     company_text = company_suffix_cn(paper)
     action = infer_action_cn(f"{paper.title} {text}")
@@ -575,10 +582,6 @@ def build_abstract_cn(paper: Paper) -> str:
     if not text:
         return f"该来源没有给出英文摘要；从标题看，论文主要围绕{focus}{company_text}展开，重点可能落在{result}。"
     return f"本文主要围绕{focus}{company_text}展开。摘要显示，作者{action}，正文大概率会依次涉及{body_flow}等内容；若快速抓重点，可优先关注其中与{result}直接相关的部分。"
-
-
-def build_reading_notes(paper: Paper) -> str:
-    return build_abstract_cn(paper)
 
 
 
@@ -677,7 +680,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
           <div class="fav-authors">作者：${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
           <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
-          <div class="fav-section"><strong>Abstract 中文翻译</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
+          <div class="fav-section"><strong>Chinese Translation</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
           <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
         </article>`;
     }
@@ -844,7 +847,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             <th>作者</th>
             <th>关键词</th>
             <th>Abstract 原文</th>
-            <th>Abstract 中文翻译</th>
+            <th>Chinese Translation</th>
             <th>Reading Notes</th>
           </tr>
         </thead>
