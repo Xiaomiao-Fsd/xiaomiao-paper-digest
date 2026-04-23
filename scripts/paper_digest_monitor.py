@@ -892,14 +892,14 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
                 <button class=\"fav-btn\" type=\"button\">☆ 收藏</button>
               </div>
               <h2><a href=\"{escape(item.url)}\" target=\"_blank\" rel=\"noopener noreferrer\">{escape(item.title)}</a></h2>
-              <div class=\"authors\">作者：{authors}</div>
+              <div class=\"authors\">Authors: {authors}</div>
               <div class=\"keywords\">{keyword_html}</div>
               <section>
-                <h3>Abstract 原文</h3>
+                <h3>Abstract</h3>
                 <p>{escape(item.summary or '（该来源未提供 abstract / summary）')}</p>
               </section>
               <section>
-                <h3>Abstract 中文翻译</h3>
+                <h3>Chinese Translation</h3>
                 <p>{escape(item.abstract_cn or '—')}</p>
               </section>
               <section>
@@ -950,7 +950,7 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
           </div>
           <button class="remove-fav" type="button">移出</button>
         </div>
-        <div class="authors">作者：${escapeHtml(authors)}</div>
+        <div class="authors">Authors: ${escapeHtml(authors)}</div>
         <div class="keywords">${kws}</div>
       </article>`;
     }
@@ -1049,7 +1049,7 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
 </head>
 <body>
   <div class=\"shell\">
-    <h1>微电子 / 集成电路论文晨报 · 手机版</h1>
+    <h1>Microelectronics / IC Paper Digest · Mobile</h1>
     <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
     <div class=\"nav\"><a href=\"{escape(desktop_url)}\">切到PC版</a></div>
     <section class=\"favorites\">
