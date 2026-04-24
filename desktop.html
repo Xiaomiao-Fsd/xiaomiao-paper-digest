@@ -1,144 +1,92 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/jpeg" href="assets/preview.jpg" />
-  <link rel="apple-touch-icon" href="assets/preview.jpg" />
-  <meta property="og:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://xiaomiao-fsd.github.io/xiaomiao-paper-digest/assets/preview.jpg" />
-  <title>Morning Paper Digest for Microelectronics｜Xiaomiao</title>
-  <script>
-    (function () {
-      var THEME_KEY = 'paper_digest_theme_v1';
-      var storedTheme = null;
-      try { storedTheme = localStorage.getItem(THEME_KEY); } catch (e) {}
-      var systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : (systemDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme;
-    })();
-  </script>
+  <title>微电子论文晨报｜PC版</title>
   <style>
     :root {
-      color-scheme: light;
-      --bg: #f4f7fb;
-      --text: #142033;
-      --sub: #5f6f87;
-      --nav-bg: #dbe7fb;
-      --nav-text: #17356f;
-      --note: #e9f0fb;
-      --warning-bg: #fff1e6;
-      --warning-text: #8a4a16;
-      --panel: #ffffff;
-      --panel-alt: #f8fbff;
-      --border: #d6e0f0;
-      --link: #1d63d6;
-      --btn-bg: #dbe7fb;
-      --btn-text: #17356f;
-      --btn-active: #6c4ad3;
-      --btn-active-text: #ffffff;
-      --shadow-border: #d6e0f0;
-      --kw-bg: #e5edfb;
-    }
-    :root[data-theme='dark'] {
       color-scheme: dark;
       --bg: #0b1020;
+      --panel: #121933;
+      --panel-2: #0f1730;
+      --panel-3: #18203a;
+      --border: #243054;
       --text: #eaf0ff;
-      --sub: #a9b6d3;
-      --nav-bg: #1e2a50;
-      --nav-text: #dce6ff;
-      --note: #18203a;
+      --text-soft: #a9b6d3;
+      --link: #8bc4ff;
+      --pill: #22305a;
+      --accent: #6c4ad3;
       --warning-bg: #3a2318;
       --warning-text: #ffd4b5;
-      --panel: #121933;
-      --panel-alt: #0f1730;
-      --border: #243054;
-      --link: #8bc4ff;
-      --btn-bg: #22305a;
-      --btn-text: #eef3ff;
-      --btn-active: #6c4ad3;
-      --btn-active-text: #eef3ff;
-      --shadow-border: #243054;
-      --kw-bg: #22305a;
+    }
+    :root[data-theme='light'] {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-2: #f8faff;
+      --panel-3: #eef3ff;
+      --border: #d7e0f3;
+      --text: #1f2a44;
+      --text-soft: #5c6b89;
+      --link: #295fd6;
+      --pill: #e7eeff;
+      --accent: #5a48d6;
+      --warning-bg: #fff2e8;
+      --warning-text: #9a4d16;
     }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 24px; background: var(--bg); color: var(--text); }
     h1 { margin: 0 0 8px; font-size: 28px; }
     h2 { margin: 0 0 12px; font-size: 22px; }
-    .sub { color: var(--sub); margin-bottom: 18px; }
+    .sub { color: var(--text-soft); margin-bottom: 18px; }
     .topbar { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
-    .topbar-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .nav { margin-left: -4px; }
-    .nav a { color: var(--nav-text); text-decoration: none; background: var(--nav-bg); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; }
-    .theme-toggle { --toggle-duration: .75s; --toggle-x: 0px; position: relative; display: inline-flex; align-items: center; justify-content: center; width: 84px; height: 40px; min-width: 84px; border: 0; padding: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; overflow: visible; }
-    .theme-toggle-track { position: relative; display: block; width: 84px; height: 40px; border-radius: 999px; overflow: hidden; background: linear-gradient(180deg, #dfeaf8 0%, #bdd3f0 100%); box-shadow: inset 0 0 0 1px rgba(130,153,188,.35), 0 1px 2px rgba(14,30,66,.08); transition: background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-track::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,0)); }
-    .theme-toggle-sky { position: absolute; border-radius: 50%; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-sky-day { width: 18px; height: 18px; left: 50px; top: 18px; background: rgba(255,255,255,.35); opacity: 1; }
-    .theme-toggle-sky-night { width: 14px; height: 14px; right: 16px; top: 11px; background: #eef2ff; box-shadow: -4px 0 0 1px rgba(17,24,39,.18) inset; opacity: 0; transform: translateY(2px) scale(.92); }
-    .theme-toggle-stars { position: absolute; inset: 0; opacity: 0; transition: opacity var(--toggle-duration) cubic-bezier(.22,.61,.36,1); }
-    .theme-toggle-stars::before { content: ''; position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.82); right: 36px; top: 11px; box-shadow: -10px 8px 0 rgba(255,255,255,.55), -18px 17px 0 rgba(255,255,255,.4), 8px 14px 0 rgba(255,255,255,.45); }
-    .theme-toggle-thumb { position: absolute; top: 4px; left: 4px; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(180deg, #ffd978 0%, #f6b73c 100%); box-shadow: 0 2px 8px rgba(108,85,24,.26), inset 0 -2px 3px rgba(180,120,10,.18); transform: translate3d(var(--toggle-x), 0, 0); will-change: transform, background, box-shadow; transition: transform var(--toggle-duration) cubic-bezier(.22,.61,.36,1), background var(--toggle-duration) cubic-bezier(.22,.61,.36,1), box-shadow var(--toggle-duration) cubic-bezier(.22,.61,.36,1); z-index: 2; }
-    .theme-toggle[data-theme='dark'] .theme-toggle-track { background: linear-gradient(180deg, #1d2745 0%, #11182d 100%); box-shadow: inset 0 0 0 1px rgba(116,137,188,.2), 0 1px 2px rgba(0,0,0,.24); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-thumb { background: linear-gradient(180deg, #eef2ff 0%, #c9d2ec 100%); box-shadow: 0 2px 8px rgba(5,8,16,.34), inset 0 -2px 3px rgba(120,130,160,.2); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-sky-day { opacity: .18; transform: scale(.92); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-sky-night { opacity: 1; transform: translateY(0) scale(1); }
-    .theme-toggle[data-theme='dark'] .theme-toggle-stars { opacity: 1; }
-    .theme-toggle:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
-    .theme-animating, .theme-animating *, .theme-animating *::before, .theme-animating *::after { transition: background-color .75s cubic-bezier(.22,.61,.36,1), color .75s cubic-bezier(.22,.61,.36,1), border-color .75s cubic-bezier(.22,.61,.36,1), box-shadow .75s cubic-bezier(.22,.61,.36,1), opacity .75s cubic-bezier(.22,.61,.36,1); }
-    .note { padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--note); }
+    .top-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .nav a, .theme-btn { color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; }
+    .note { padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--panel-3); }
     .warning { background: var(--warning-bg); color: var(--warning-text); }
     .section { margin: 0 0 20px; }
     .favorites { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 18px; margin-bottom: 20px; }
-    .favorites-sub { color: var(--sub); margin: 0 0 14px; }
+    .favorites-sub { color: var(--text-soft); margin: 0 0 14px; }
     .favorites-list { display: grid; gap: 14px; }
-    .fav-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--panel-alt); }
+    .fav-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--panel-2); }
     .fav-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 8px; }
     .fav-title a { color: var(--text); font-size: 18px; text-decoration: none; }
-    .fav-meta, .fav-authors { color: var(--sub); font-size: 13px; }
+    .fav-meta, .fav-authors { color: var(--text-soft); font-size: 13px; }
     .fav-section { margin-top: 10px; }
     .fav-section p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.65; }
-    .remove-fav, .fav-btn { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--btn-bg); color: var(--btn-text); }
-    .fav-btn.active { background: var(--btn-active); color: var(--btn-active-text); }
-    .empty-fav { color: var(--sub); }
-    .table-wrap { overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--shadow-border) inset; }
+    .remove-fav, .fav-btn { border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; background: var(--pill); color: var(--text); }
+    .fav-btn.active { background: var(--accent); color: #fff; }
+    .empty-fav { color: var(--text-soft); }
+    .table-wrap { overflow-x: auto; border-radius: 14px; box-shadow: 0 0 0 1px var(--border) inset; }
     table { width: 100%; min-width: 2000px; border-collapse: collapse; background: var(--panel); }
     th, td { border: 1px solid var(--border); padding: 12px; vertical-align: top; text-align: left; }
-    th { background: var(--note); position: sticky; top: 0; z-index: 1; }
-    tr:nth-child(even) td { background: var(--panel-alt); }
+    th { background: var(--panel-3); position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) td { background: var(--panel-2); }
     a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
     .abstract { min-width: 360px; white-space: pre-wrap; line-height: 1.55; }
     .abstract-cn, .overview { min-width: 300px; white-space: pre-wrap; line-height: 1.6; }
-    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--kw-bg); margin: 0 6px 6px 0; }
-    .muted { color: var(--sub); }
+    .kw { display: inline-block; padding: 4px 8px; border-radius: 999px; background: var(--pill); margin: 0 6px 6px 0; }
+    .muted { color: var(--text-soft); }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div>
-      <h1>Morning Paper Digest for Microelectronics / IC · Desktop</h1>
-      <div class="sub" id="digest-updated">Updated: Loading…</div>
+      <h1>微电子 / 集成电路论文晨报 · PC版</h1>
+      <div class="sub">更新时间：2026-04-24 08:30（Asia/Shanghai）</div>
     </div>
-    <div class="topbar-actions">
-      <div class="nav"><a href="mobile.html">Mobile view</a></div>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme" title="Toggle light and dark theme. Double-click quickly or right-click to follow the system setting.">
-        <span class="theme-toggle-track" aria-hidden="true">
-          <span class="theme-toggle-sky theme-toggle-sky-day"></span>
-          <span class="theme-toggle-sky theme-toggle-sky-night"></span>
-          <span class="theme-toggle-stars"></span>
-          <span class="theme-toggle-thumb"></span>
-        </span>
-      </button>
+    <div class="top-actions">
+      <button id="theme-toggle" class="theme-btn" type="button">🌙 深色</button>
+      <div class="nav"><a href="/paper_digest/mobile.html">切到手机版</a></div>
     </div>
   </div>
   <section class="favorites section">
-    <h2>Saved Papers</h2>
-    <p class="favorites-sub">Saved papers stay in this browser on this device, so you can revisit them later.</p>
+    <h2>收藏夹</h2>
+    <p class="favorites-sub">你收藏过的论文会长期保留在这台设备的浏览器里，后面打开页面也还在。</p>
     <div id="favorites-list" class="favorites-list"></div>
   </section>
+  
   
   <section class="section">
     <div class="table-wrap">
@@ -146,19 +94,19 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Save</th>
-            <th>Source</th>
-            <th>Published</th>
-            <th>Paper Title / Link</th>
+            <th>收藏</th>
+            <th>来源</th>
+            <th>日期</th>
+            <th>Title / Link</th>
             <th>Authors</th>
-            <th>Keywords</th>
-            <th>Abstract (Original)</th>
-            <th>Abstract Translation (ZH)</th>
-            <th>正文概括（基于标题/摘要）</th>
+            <th>关键词</th>
+            <th>Abstract</th>
+            <th>Chinese Translation</th>
+            <th>Reading Notes</th>
           </tr>
         </thead>
-        <tbody id="papers-body">
-          <tr><td colspan="10">Loading latest papers…</td></tr>
+        <tbody>
+          <tr><td colspan="10">No matching papers found today.</td></tr>
         </tbody>
       </table>
     </div>
@@ -167,148 +115,20 @@
   <script>
     const FAVORITES_KEY = 'paper_digest_favorites_v1';
     const THEME_KEY = 'paper_digest_theme_v1';
-    const themeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    function getStoredTheme() {
-      try { return localStorage.getItem(THEME_KEY); } catch { return null; }
-    }
-    function getPreferredTheme() {
-      const stored = getStoredTheme();
-      if (stored === 'light' || stored === 'dark') return stored;
-      return themeQuery && themeQuery.matches ? 'dark' : 'light';
-    }
-    function applyTheme(theme, options = {}) {
-      const shouldAnimate = options.animate !== false;
-      if (shouldAnimate) document.documentElement.classList.add('theme-animating');
-      document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.style.colorScheme = theme;
-      if (shouldAnimate) {
-        clearTimeout(window.__themeAnimTimer);
-        window.__themeAnimTimer = setTimeout(() => {
-          document.documentElement.classList.remove('theme-animating');
-        }, 750);
-      }
-    }
-    function updateThemeToggle(theme = null, options = {}) {
-      const btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-      const stored = getStoredTheme();
-      const current = theme || document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      const nextX = current === 'dark' ? 44 : 0;
-      const thumb = btn.querySelector('.theme-toggle-thumb');
-      const prevX = Number(btn.dataset.x || (document.documentElement.getAttribute('data-theme') === 'dark' ? 44 : 0));
-      btn.dataset.theme = current;
-      btn.dataset.mode = stored ? 'manual' : 'system';
-      btn.dataset.x = String(nextX);
-      btn.style.setProperty('--toggle-x', `${nextX}px`);
-      if (thumb && options.animate && thumb.animate) {
-        try {
-          if (btn.__thumbAnim) btn.__thumbAnim.cancel();
-          btn.__thumbAnim = thumb.animate(
-            [
-              { transform: `translate3d(${prevX}px, 0, 0)` },
-              { transform: `translate3d(${nextX}px, 0, 0)` }
-            ],
-            {
-              duration: 750,
-              easing: 'cubic-bezier(.22,.61,.36,1)',
-              fill: 'forwards'
-            }
-          );
-        } catch {}
-      }
-      const modeLabel = stored ? `Manual ${current} mode` : `Following system (${current})`;
-      btn.setAttribute('aria-label', `Theme toggle. ${modeLabel}. Click to switch. Double-click quickly or right-click to follow the system setting.`);
-      btn.title = stored
-        ? 'Manual theme mode. Click to switch between light and dark. Double-click quickly or right-click to follow the system setting.'
-        : 'Currently following the system theme. Click to switch manually.';
-    }
-    function setThemePreference(next) {
-      const targetTheme = next === null ? getPreferredTheme() : next;
-      const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
-      if (next === null) {
-        try { localStorage.removeItem(THEME_KEY); } catch {}
-      } else {
-        try { localStorage.setItem(THEME_KEY, next); } catch {}
-      }
-      if (targetTheme === currentTheme) {
-        applyTheme(targetTheme, { animate: false });
-        updateThemeToggle(targetTheme, { animate: false });
-        return;
-      }
-      updateThemeToggle(targetTheme, { animate: true });
-      requestAnimationFrame(() => {
-        applyTheme(targetTheme);
-      });
-    }
-    function cycleThemePreference() {
-      const stored = getStoredTheme();
-      const current = stored || getPreferredTheme();
-      const next = current === 'dark' ? 'light' : 'dark';
-      setThemePreference(next);
-    }
-
-    function escapeHtml(text) {
-      return String(text ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    }
-    function renderKeywords(tags) {
-      if (!tags || !tags.length) return '—';
-      return tags.map(tag => `<span class="kw">${escapeHtml(tag)}</span>`).join('');
-    }
-    function renderDesktopRows(papers) {
-      if (!papers || !papers.length) return '<tr><td colspan="10">No matching new papers have been identified in the last 7 days yet.</td></tr>';
-      return papers.map((paper, idx) => {
-        const payload = escapeHtml(JSON.stringify({
-          uid: paper.uid, source: paper.source, published: paper.published, title: paper.title, url: paper.url,
-          authors: paper.authors || [], highlights: paper.highlights || [], summary: paper.summary || '—',
-          abstract_cn: paper.abstract_cn || '—', overview_cn: (paper.overview_cn || paper.keyword_extract || '—'),
-          keyword_extract: paper.keyword_extract || paper.overview_cn || '—'
-        }));
-        const authors = escapeHtml((paper.authors || []).join(', ') || '—');
-        const summary = escapeHtml(paper.summary || '（该来源未提供 abstract / summary）');
-        const abstractCn = escapeHtml(paper.abstract_cn || '—');
-        const overview = escapeHtml(paper.overview_cn || paper.keyword_extract || '—');
-        return `<tr data-paper='${payload}'>
-          <td>${idx + 1}</td>
-          <td><button class="fav-btn" type="button">☆ Save</button></td>
-          <td>${escapeHtml(paper.source || '—')}</td>
-          <td>${escapeHtml(paper.published || '—')}</td>
-          <td><a href="${escapeHtml(paper.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title || 'Untitled')}</a></td>
-          <td>${authors}</td>
-          <td>${renderKeywords(paper.highlights)}</td>
-          <td class="abstract">${summary}</td>
-          <td class="abstract-cn">${abstractCn}</td>
-          <td class="overview">${overview}</td>
-        </tr>`;
-      }).join('');
-    }
-    async function hydrateDesktopDigest() {
-      try {
-        const res = await fetch('latest.json', { cache: 'no-store' });
-        const data = await res.json();
-        const updatedEl = document.getElementById('digest-updated');
-        if (updatedEl) {
-          const dt = data.generated_at ? new Date(data.generated_at) : null;
-          const label = dt && !Number.isNaN(dt.getTime())
-            ? new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Shanghai' }).format(dt)
-            : 'Unknown';
-          updatedEl.textContent = `Updated: ${label} (Asia/Shanghai) · Coverage: last 7 days`;
-        }
-        const body = document.getElementById('papers-body');
-        if (body) body.innerHTML = renderDesktopRows(data.papers || []);
-        if (data.ok === false && body) {
-          body.insertAdjacentHTML('beforebegin', `<div class="note warning">${escapeHtml(data.message || 'Digest generation failed.')}</div>`);
-        }
-        renderFavorites();
-        bindTableButtons();
-      } catch (err) {
-        const body = document.getElementById('papers-body');
-        const msg = err && err.message ? err.message : String(err);
-        if (body) body.innerHTML = `<tr><td colspan="10">Failed to load latest.json. ${escapeHtml(msg)}</td></tr>`;
-      }
-    }
-
     function loadFavorites() {
       try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; }
+    }
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.setAttribute('data-theme', 'light');
+      } else {
+        root.removeAttribute('data-theme');
+        theme = 'dark';
+      }
+      const btn = document.getElementById('theme-toggle');
+      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(items));
@@ -318,7 +138,7 @@
     }
     function paperCardHtml(paper) {
       const authors = (paper.authors || []).join(', ') || '—';
-      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="muted">No keywords</span>';
+      const kws = (paper.highlights || []).length ? paper.highlights.map(k => `<span class="kw">${escapeHtml(k)}</span>`).join(' ') : '<span class="muted">无关键词</span>';
       return `
         <article class="fav-card" data-uid="${escapeHtml(paper.uid)}">
           <div class="fav-head">
@@ -326,20 +146,20 @@
               <div class="fav-title"><a href="${escapeHtml(paper.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(paper.title)}</a></div>
               <div class="fav-meta">${escapeHtml(paper.source)} · ${escapeHtml(paper.published)}</div>
             </div>
-            <button class="remove-fav" type="button">Remove</button>
+            <button class="remove-fav" type="button">移出收藏</button>
           </div>
           <div class="fav-authors">Authors: ${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
-          <div class="fav-section"><strong>Abstract (Original)</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
-          <div class="fav-section"><strong>Chinese Summary</strong><p>${escapeHtml(paper.abstract_cn || '—')}</p></div>
-          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.overview_cn || paper.keyword_extract || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
+          <div class="fav-section"><strong>Chinese Translation</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
+          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
         </article>`;
     }
     function renderFavorites() {
       const wrap = document.getElementById('favorites-list');
       const items = loadFavorites();
       if (!items.length) {
-        wrap.innerHTML = '<div class="empty-fav">No saved papers yet. Use “Save” on any paper you want to keep.</div>';
+        wrap.innerHTML = '<div class="empty-fav">还没有收藏的论文。看到感兴趣的就点右边的“收藏”。</div>';
         return;
       }
       wrap.innerHTML = items.map(paperCardHtml).join('');
@@ -361,7 +181,7 @@
         if (!btn) return;
         const paper = JSON.parse(tr.dataset.paper);
         const active = favs.has(paper.uid);
-        btn.textContent = active ? '★ Saved' : '☆ Save';
+        btn.textContent = active ? '★ 已收藏' : '☆ 收藏';
         btn.classList.toggle('active', active);
       });
     }
@@ -383,42 +203,14 @@
       syncButtons();
     }
     document.addEventListener('DOMContentLoaded', () => {
-      applyTheme(getPreferredTheme(), { animate: false });
-      const toggle = document.getElementById('theme-toggle');
-      if (toggle) {
-        updateThemeToggle();
-        let clickTimer = null;
-        toggle.addEventListener('click', () => {
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            setThemePreference(null);
-            return;
-          }
-          clickTimer = setTimeout(() => {
-            clickTimer = null;
-            cycleThemePreference();
-          }, 180);
-        });
-        toggle.addEventListener('contextmenu', event => {
-          event.preventDefault();
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-          }
-          setThemePreference(null);
-        });
-      }
-      if (themeQuery && typeof themeQuery.addEventListener === 'function') {
-        themeQuery.addEventListener('change', () => {
-          if (!getStoredTheme()) {
-            applyTheme(getPreferredTheme(), { animate: false });
-            updateThemeToggle();
-          }
-        });
-      }
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      const themeBtn = document.getElementById('theme-toggle');
+      if (themeBtn) themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
       renderFavorites();
-      hydrateDesktopDigest();
+      bindTableButtons();
     });
   </script>
     
