@@ -574,14 +574,12 @@ def build_abstract_cn(paper: Paper) -> str:
 
 def build_reading_notes(paper: Paper) -> str:
     text = strip_html(paper.summary)
+    title = normalize_space(paper.title)
     focus = focus_terms_cn(paper)
-    company_text = company_suffix_cn(paper)
-    action = infer_action_cn(f"{paper.title} {text}")
     result = infer_result_cn(f"{paper.title} {text}")
-    body_flow = infer_body_flow_cn(f"{paper.title} {text}")
     if not text:
-        return f"该来源没有给出英文摘要；从标题看，论文主要围绕{focus}{company_text}展开，重点可能落在{result}。"
-    return f"本文主要围绕{focus}{company_text}展开。摘要显示，作者{action}，正文大概率会依次涉及{body_flow}等内容；若快速抓重点，可优先关注其中与{result}直接相关的部分。"
+        return f"Focus: {focus}.\nNote: no abstract available; infer from title only."
+    return f"Focus: {focus}.\nWhat to check: {result}.\nContext: {short(title, 96)}."
 
 
 
@@ -677,9 +675,9 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             </div>
             <button class="remove-fav" type="button">移出收藏</button>
           </div>
-          <div class="fav-authors">作者：${escapeHtml(authors)}</div>
+          <div class="fav-authors">Authors: ${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
-          <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
           <div class="fav-section"><strong>Chinese Translation</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
           <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
         </article>`;
@@ -843,10 +841,10 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             <th>收藏</th>
             <th>来源</th>
             <th>日期</th>
-            <th>标题 / 链接</th>
-            <th>作者</th>
+            <th>Title / Link</th>
+            <th>Authors</th>
             <th>关键词</th>
-            <th>Abstract 原文</th>
+            <th>Abstract</th>
             <th>Chinese Translation</th>
             <th>Reading Notes</th>
           </tr>
