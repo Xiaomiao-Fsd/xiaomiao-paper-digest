@@ -74,7 +74,7 @@
   <div class="topbar">
     <div>
       <h1>Microelectronics / IC Paper Digest · Desktop</h1>
-      <div class="sub">Updated: 2026-04-25 14:24（Asia/Shanghai）</div>
+      <div class="sub">Updated: 2026-04-25 14:27（Asia/Shanghai）</div>
     </div>
     <div class="top-actions">
       <button id="theme-toggle" class="theme-btn" type="button">🌙 深色</button>
@@ -239,7 +239,7 @@ Context: Enhancing Coherence of Spin Centers in p-n Diodes via Optimization Algo
         theme = 'dark';
       }
       const btn = document.getElementById('theme-toggle');
-      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      if (btn) btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
       localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
