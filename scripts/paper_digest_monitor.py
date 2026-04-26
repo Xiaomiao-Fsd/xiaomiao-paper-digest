@@ -590,7 +590,7 @@ def render_error_html(errors: list[str]) -> str:
 
 
 def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime, mobile_url: str, ok: bool = True, status_message: str | None = None) -> str:
-    date_label = effective_publish_dt(run_dt).astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
     status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
     row_payloads = []
     rows = []
@@ -599,8 +599,8 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         keywords = item.highlights or []
         keyword_html = " ".join(f'<span class="kw">{escape(tag)}</span>' for tag in keywords) if keywords else "—"
         abstract = escape(item.summary or "（该来源未提供 abstract / summary）")
-        abstract_cn = escape(item.abstract_cn or "—")
-        overview = escape(item.reading_notes or "—")
+        abstract_cn = escape(item.abstract_cn or item.abstract_zh or "—")
+        overview = escape(item.reading_notes or item.overview_cn or "—")
         title = escape(item.title)
         link = escape(item.url)
         payload = {
@@ -612,10 +612,10 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
             "authors": item.authors or [],
             "highlights": keywords,
             "summary": item.summary or "（该来源未提供 abstract / summary）",
-            "abstract_cn": item.abstract_cn or "—",
-            "abstract_zh": item.abstract_cn or "—",
-            "overview_cn": item.reading_notes or "—",
-            "reading_notes": item.reading_notes or "—",
+            "abstract_cn": item.abstract_cn or item.abstract_zh or "—",
+            "abstract_zh": item.abstract_cn or item.abstract_zh or "—",
+            "overview_cn": item.reading_notes or item.overview_cn or "—",
+            "reading_notes": item.reading_notes or item.overview_cn or "—",
         }
         row_payloads.append(payload)
         rows.append(
@@ -654,7 +654,11 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
         theme = 'dark';
       }
       const btn = document.getElementById('theme-toggle');
-      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      if (btn) {
+        btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+        btn.setAttribute('aria-label', theme === 'light' ? '切换到深色主题' : '切换到浅色主题');
+        btn.setAttribute('title', theme === 'light' ? '切换到深色主题' : '切换到浅色主题');
+      }
       localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
@@ -677,9 +681,9 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
           </div>
           <div class="fav-authors">Authors: ${escapeHtml(authors)}</div>
           <div class="fav-kws">${kws}</div>
-          <div class="fav-section"><strong>Abstract</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
-          <div class="fav-section"><strong>Chinese Translation</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
-          <div class="fav-section"><strong>Reading Notes</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract 原文</strong><p>${escapeHtml(paper.summary || '—')}</p></div>
+          <div class="fav-section"><strong>Abstract 中文翻译</strong><p>${escapeHtml(paper.abstract_cn || paper.abstract_zh || '—')}</p></div>
+          <div class="fav-section"><strong>关键词提取</strong><p>${escapeHtml(paper.reading_notes || paper.overview_cn || '—')}</p></div>
         </article>`;
     }
     function renderFavorites() {
@@ -785,7 +789,15 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
     .sub {{ color: var(--text-soft); margin-bottom: 18px; }}
     .topbar {{ display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }}
     .top-actions {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
-    .nav a, .theme-btn {{ color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; }}
+    .nav a {{ color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; }}
+    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; }}
+    .theme-switch:hover {{ transform: translateY(-1px); }}
+    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; pointer-events:none; }}
+    .theme-switch .sun {{ left:11px; }}
+    .theme-switch .moon {{ right:11px; }}
+    .theme-switch .thumb {{ position:absolute; top:4px; left:4px; width:30px; height:30px; border-radius:50%; background:#f7f2d0; box-shadow:0 3px 12px rgba(0,0,0,.28); transition:left .28s ease, background .28s ease; }}
+    :root[data-theme='light'] .theme-switch {{ background: linear-gradient(135deg, #8ec5ff, #d8ebff); }}
+    :root[data-theme='light'] .theme-switch .thumb {{ left:34px; background:#ffffff; }}
     .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--panel-3); }}
     .warning {{ background: var(--warning-bg); color: var(--warning-text); }}
     .section {{ margin: 0 0 20px; }}
@@ -817,12 +829,16 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
 <body>
   <div class=\"topbar\">
     <div>
-      <h1>微电子 / 集成电路论文晨报 · PC版</h1>
-      <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
+      <h1>Microelectronics / IC Paper Digest · Desktop</h1>
+      <div class=\"sub\">Updated: {escape(date_label)}（Asia/Shanghai）</div>
     </div>
     <div class=\"top-actions\">
-      <button id=\"theme-toggle\" class=\"theme-btn\" type=\"button\">🌙 深色</button>
-      <div class=\"nav\"><a href=\"{escape(mobile_url)}\">切到手机版</a></div>
+      <button id=\"theme-toggle\" class=\"theme-switch\" type=\"button\" aria-label=\"切换主题\" aria-pressed=\"false\">
+        <span class=\"track-icon sun\">☀️</span>
+        <span class=\"track-icon moon\">🌙</span>
+        <span class=\"thumb\"></span>
+      </button>
+      <div class=\"nav\"><a href=\"{escape(mobile_url)}\">Switch to Mobile</a></div>
     </div>
   </div>
   <section class=\"favorites section\">
@@ -839,11 +855,11 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
           <tr>
             <th>#</th>
             <th>收藏</th>
-            <th>来源</th>
-            <th>日期</th>
+            <th>Source</th>
+            <th>Date</th>
             <th>Title / Link</th>
             <th>Authors</th>
-            <th>关键词</th>
+            <th>Keywords</th>
             <th>Abstract</th>
             <th>Chinese Translation</th>
             <th>Reading Notes</th>
@@ -862,7 +878,7 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
 
 
 def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, desktop_url: str, ok: bool = True, status_message: str | None = None) -> str:
-    date_label = effective_publish_dt(run_dt).astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
+    date_label = run_dt.astimezone(CN_TZ).strftime("%Y-%m-%d %H:%M")
     status_banner_html = f'<div class=\"note warning\">{escape(status_message)}</div>' if (not ok and status_message) else ''
     cards = []
     for idx, item in enumerate(items, 1):
@@ -877,10 +893,10 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
             "authors": item.authors or [],
             "highlights": item.highlights or [],
             "summary": item.summary or "（该来源未提供 abstract / summary）",
-            "abstract_cn": item.abstract_cn or "—",
-            "abstract_zh": item.abstract_cn or "—",
-            "overview_cn": item.reading_notes or "—",
-            "reading_notes": item.reading_notes or "—",
+            "abstract_cn": item.abstract_cn or item.abstract_zh or "—",
+            "abstract_zh": item.abstract_cn or item.abstract_zh or "—",
+            "overview_cn": item.reading_notes or item.overview_cn or "—",
+            "reading_notes": item.reading_notes or item.overview_cn or "—",
         }
         cards.append(
             f"""
@@ -901,18 +917,18 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
               </section>
               <section>
                 <h3>Chinese Translation</h3>
-                <p>{escape(item.abstract_cn or '—')}</p>
+                <p>{escape(item.abstract_cn or item.abstract_zh or '—')}</p>
               </section>
               <section>
                 <h3>Reading Notes</h3>
-                <p>{escape(item.reading_notes or '—')}</p>
+                <p>{escape(item.reading_notes or item.overview_cn or '—')}</p>
               </section>
             </article>
             """.strip()
         )
 
     if not cards:
-        cards.append('<article class="card"><p>今天暂时没有命中的新论文。</p></article>')
+        cards.append('<article class="card"><p>No matching papers found today.</p></article>')
 
     favorites_script = """
   <script>
@@ -930,7 +946,11 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
         theme = 'dark';
       }
       const btn = document.getElementById('theme-toggle');
-      if (btn) btn.textContent = theme === 'light' ? '☀️ 浅色' : '🌙 深色';
+      if (btn) {
+        btn.setAttribute('aria-pressed', theme === 'light' ? 'true' : 'false');
+        btn.setAttribute('aria-label', theme === 'light' ? '切换到深色主题' : '切换到浅色主题');
+        btn.setAttribute('title', theme === 'light' ? '切换到深色主题' : '切换到浅色主题');
+      }
       localStorage.setItem(THEME_KEY, theme);
     }
     function saveFavorites(items) {
@@ -1029,7 +1049,14 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
     h2 {{ font-size: 20px; margin: 0 0 10px; }}
     .sub {{ color: var(--soft); margin-bottom: 12px; font-size: 14px; }}
     .top-actions {{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }}
-    .nav a, .theme-btn {{ display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }}
+    .nav a {{ display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }}
+    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; }}
+    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; }}
+    .theme-switch .sun {{ left:11px; }}
+    .theme-switch .moon {{ right:11px; }}
+    .theme-switch .thumb {{ position:absolute; top:4px; left:4px; width:30px; height:30px; border-radius:50%; background:#f7f2d0; box-shadow:0 3px 12px rgba(0,0,0,.28); transition:left .28s ease, background .28s ease; }}
+    :root[data-theme='light'] .theme-switch {{ background: linear-gradient(135deg, #8ec5ff, #d8ebff); }}
+    :root[data-theme='light'] .theme-switch .thumb {{ left:34px; background:#ffffff; }}
     .note {{ background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }}
     .warning {{ background: var(--warnbg); color: var(--warntext); }}
     .favorites {{ background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }}
@@ -1051,8 +1078,15 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
 <body>
   <div class=\"shell\">
     <h1>Microelectronics / IC Paper Digest · Mobile</h1>
-    <div class=\"sub\">更新时间：{escape(date_label)}（Asia/Shanghai）</div>
-    <div class=\"nav\"><a href=\"{escape(desktop_url)}\">切到PC版</a></div>
+    <div class=\"sub\">Updated: {escape(date_label)}（Asia/Shanghai）</div>
+    <div class=\"top-actions\">
+      <button id=\"theme-toggle\" class=\"theme-switch\" type=\"button\" aria-label=\"切换主题\" aria-pressed=\"false\">
+        <span class=\"track-icon sun\">☀️</span>
+        <span class=\"track-icon moon\">🌙</span>
+        <span class=\"thumb\"></span>
+      </button>
+      <div class=\"nav\"><a href=\"{escape(desktop_url)}\">Switch to Desktop</a></div>
+    </div>
     <section class=\"favorites\">
       <h2>收藏夹</h2>
       <p class=\"favorites-sub\">收藏会保存在当前设备浏览器里，后面打开页面还能继续看到。</p>
@@ -1195,7 +1229,7 @@ def effective_publish_dt(run_dt: datetime) -> datetime:
 def build_message(items: list[Paper], errors: list[str], run_dt: datetime) -> str:
     display_dt = effective_publish_dt(run_dt)
     header = f"论文晨报｜微电子材料 / 晶体管（{display_dt.astimezone(CN_TZ).strftime('%Y-%m-%d')}）"
-    checked = "来源：arXiv / Science Advances / Nature Electronics / Nature Materials"
+    checked = "Sources: arXiv / Science Advances / Nature Electronics / Nature Materials"
     if not items:
         lines = [header, checked, "今天暂时没刷到新的高相关论文。"]
         if errors:
@@ -1214,7 +1248,7 @@ def build_message(items: list[Paper], errors: list[str], run_dt: datetime) -> st
             author_text = ", ".join(item.authors[:3])
             if len(item.authors) > 3:
                 author_text += " 等"
-            lines.append(f"   作者：{author_text}")
+            lines.append(f"   Authors: {author_text}")
         lines.append(f"   {item.url}")
     if errors:
         lines.append("注：以下源本次抓取失败：" + "、".join(errors))
@@ -1277,13 +1311,14 @@ def main() -> int:
 
         ranked = rank_and_filter(all_papers)
         unseen = [paper for paper in ranked if paper.uid not in seen_ids]
-        selected = unseen[: args.max_items]
+        selected = ranked[: args.max_items]
+        message_items = unseen[: args.max_items]
 
         run_dt = datetime.now(UTC)
         for paper in selected:
             paper.abstract_cn = build_abstract_cn(paper)
             paper.reading_notes = build_reading_notes(paper)
-        message = build_message(selected, errors, run_dt)
+        message = build_message(message_items if message_items else selected, errors, run_dt)
 
         for paper in unseen:
             seen_ids[paper.uid] = now_ts
