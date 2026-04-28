@@ -66,9 +66,9 @@ def build_message(base_url: str) -> str:
         [
             "论文晨报外链更新了，最新地址在这里：",
             "",
-            f"- 主入口\n{base}/paper_digest/index.html",
-            f"- PC 版\n{base}/paper_digest/desktop.html",
-            f"- 手机版\n{base}/paper_digest/mobile.html",
+            f"- 主入口\n{base}/index.html",
+            f"- PC 版\n{base}/desktop.html",
+            f"- 手机版\n{base}/mobile.html",
             "",
             "旧链接已经失效，收藏新的这个就行。=^･ω･^=",
         ]
