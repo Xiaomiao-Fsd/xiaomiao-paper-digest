@@ -790,13 +790,14 @@ def render_desktop_html(items: list[Paper], errors: list[str], run_dt: datetime,
     .topbar {{ display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }}
     .top-actions {{ display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }}
     .nav a {{ color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border: 0; cursor: pointer; }}
-    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; }}
+    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; color: transparent; font-size: 0; line-height: 0; overflow: hidden; appearance: none; -webkit-appearance: none; }}
     .theme-switch:hover {{ transform: translateY(-1px); }}
-    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; pointer-events:none; }}
+    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; pointer-events:none; color: #fff; line-height: 1; }}
     .theme-switch .sun {{ left:11px; }}
     .theme-switch .moon {{ right:11px; }}
     .theme-switch .thumb {{ position:absolute; top:4px; left:4px; width:30px; height:30px; border-radius:50%; background:#f7f2d0; box-shadow:0 3px 12px rgba(0,0,0,.28); transition:left .28s ease, background .28s ease; }}
     :root[data-theme='light'] .theme-switch {{ background: linear-gradient(135deg, #8ec5ff, #d8ebff); }}
+    :root[data-theme='light'] .theme-switch .track-icon {{ color: #24407a; }}
     :root[data-theme='light'] .theme-switch .thumb {{ left:34px; background:#ffffff; }}
     .note {{ padding: 12px 14px; border-radius: 10px; margin: 12px 0 20px; background: var(--panel-3); }}
     .warning {{ background: var(--warning-bg); color: var(--warning-text); }}
@@ -1050,12 +1051,13 @@ def render_mobile_html(items: list[Paper], errors: list[str], run_dt: datetime, 
     .sub {{ color: var(--soft); margin-bottom: 12px; font-size: 14px; }}
     .top-actions {{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }}
     .nav a {{ display: inline-block; color: var(--text); text-decoration: none; background: var(--pill); padding: 8px 12px; border-radius: 999px; border:0; cursor:pointer; }}
-    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; }}
-    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; }}
+    .theme-switch {{ position: relative; width: 68px; height: 38px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1f2f63, #304b95); cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); transition: background .28s ease, transform .2s ease; color: transparent; font-size: 0; line-height: 0; overflow: hidden; appearance: none; -webkit-appearance: none; }}
+    .theme-switch .track-icon {{ position:absolute; top:9px; font-size:13px; opacity:.95; color: #fff; line-height: 1; }}
     .theme-switch .sun {{ left:11px; }}
     .theme-switch .moon {{ right:11px; }}
     .theme-switch .thumb {{ position:absolute; top:4px; left:4px; width:30px; height:30px; border-radius:50%; background:#f7f2d0; box-shadow:0 3px 12px rgba(0,0,0,.28); transition:left .28s ease, background .28s ease; }}
     :root[data-theme='light'] .theme-switch {{ background: linear-gradient(135deg, #8ec5ff, #d8ebff); }}
+    :root[data-theme='light'] .theme-switch .track-icon {{ color: #24407a; }}
     :root[data-theme='light'] .theme-switch .thumb {{ left:34px; background:#ffffff; }}
     .note {{ background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }}
     .warning {{ background: var(--warnbg); color: var(--warntext); }}
